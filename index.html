@@ -185,59 +185,6 @@
 
       <div class="body-wrap">
   
-    <article id="post-first" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/07/15/first/" class="article-date">
-  	<time datetime="2016-07-15T08:49:18.000Z" itemprop="datePublished">2016-07-15</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/07/15/first/">第一篇文章</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>欢迎来到我的blog，感谢Hexo提供工具，感谢Litten提供模板，谢谢大家</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
     <article id="post-2015-11-20-five" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -391,18 +338,16 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>#HashMap两种遍历方式的比较</p>
-<p>###第一种方式：<br>通过keySet()方式遍历</p>
+<h3 id="第一种方式："><a href="#第一种方式：" class="headerlink" title="第一种方式："></a>第一种方式：</h3><p>通过keySet()方式遍历</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">HashMap hashmap = <span class="keyword">new</span> HashMap();</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++ ) &#123;</div><div class="line">hashmap.put(<span class="string">""</span> +i, <span class="string">"thanks"</span> + i);</div><div class="line">&#125;</div><div class="line"><span class="keyword">long</span> bs = Calendar.getInstance().getTimeInMillis();</div><div class="line">Iterator iterator = hashmap.keySet().iterator();</div><div class="line"><span class="keyword">while</span> (iterator.hasNext()) &#123;</div><div class="line">    Object key1 =iterator.next();</div><div class="line">    Object value1 = hashmap.get(key1);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>###第二种方式：</p>
-<p>通过entrySet()方式遍历</p>
+<h3 id="第二种方式："><a href="#第二种方式：" class="headerlink" title="第二种方式："></a>第二种方式：</h3><p>通过entrySet()方式遍历</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">HashMap hashmap1 = <span class="keyword">new</span> HashMap();</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++ ) &#123;</div><div class="line">    hashmap1.put(<span class="string">""</span> +i, <span class="string">"thanks"</span> + i);</div><div class="line">&#125;</div><div class="line"><span class="keyword">long</span> bs1 = Calendar.getInstance().getTimeInMillis();</div><div class="line">java.util.Iterator it = hashmap1.entrySet().iterator();</div><div class="line"><span class="keyword">while</span> (it.hasNext())&#123;</div><div class="line">    java.util.Map.Entry entry = (java.util.Map.Entry) it.next();</div><div class="line">    Object key2 = entry.getKey();</div><div class="line">    Object value2 = entry.getValue();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>这两种方式到底哪种快呢？通过查看HashMap源代码可以发现，调用KeyIterator.next()等效于EntryIterator.next().getKey()</p>
 <p>但是在获取value的时候，HashMap.get(KeyIterator.next())需要进行一次hash，所以耗时比直接从EntryIterator.next().getValue()要多。</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">KeyIterator</span> <span class="keyword">extends</span> <span class="title">HashIterator</span>&lt;<span class="title">K</span>&gt; </span>&#123;</div><div class="line">    <span class="function"><span class="keyword">public</span> K <span class="title">next</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> nextEntry().getKey();</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">EntryIterator</span> <span class="keyword">extends</span> <span class="title">HashIterator</span>&lt;<span class="title">Map</span>.<span class="title">Entry</span>&lt;<span class="title">K</span>,<span class="title">V</span>&gt;&gt; </span>&#123;</div><div class="line">    <span class="keyword">public</span> Map.<span class="function">Entry&lt;K,V&gt; <span class="title">next</span><span class="params">()</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> nextEntry();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>实践出真知，通过测试代码对两种方式的耗时进行比较，果然是遍历keySet()耗时更久。测试用例如下:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line">HashMap hashmap = <span class="keyword">new</span> HashMap();</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++ ) &#123;</div><div class="line">hashmap.put(<span class="string">""</span> +i, <span class="string">"thanks"</span> + i);</div><div class="line">&#125;</div><div class="line"><span class="keyword">long</span> bs = Calendar.getInstance().getTimeInMillis();</div><div class="line">Iterator iterator = hashmap.keySet().iterator();</div><div class="line"><span class="keyword">while</span> (iterator.hasNext()) &#123;</div><div class="line">    Object key1 =iterator.next();</div><div class="line">    Object value1 = hashmap.get(key1);</div><div class="line">&#125;</div><div class="line"> System.out.println();</div><div class="line"> System.out.println(<span class="string">"keyset:"</span>);</div><div class="line"> System.out.println( Calendar.getInstance().getTimeInMillis() - bs);</div><div class="line"></div><div class="line"> HashMap hashmap1 = <span class="keyword">new</span> HashMap();</div><div class="line"> <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10000000</span>; i++ ) &#123;</div><div class="line">     hashmap1.put(<span class="string">""</span> +i, <span class="string">"thanks"</span> + i);</div><div class="line"> &#125;</div><div class="line"> <span class="keyword">long</span> bs1 = Calendar.getInstance().getTimeInMillis();</div><div class="line"> java.util.Iterator it = hashmap1.entrySet().iterator();</div><div class="line"> <span class="keyword">while</span> (it.hasNext())&#123;</div><div class="line">     java.util.Map.Entry entry = (java.util.Map.Entry) it.next();</div><div class="line">     Object key2 = entry.getKey();</div><div class="line">     Object value2 = entry.getValue();</div><div class="line"> &#125;</div><div class="line"> System.out.println();</div><div class="line"> System.out.println(<span class="string">"keyEntry"</span>);</div><div class="line"> System.out.println(Calendar.getInstance().getTimeInMillis() - bs1);</div></pre></td></tr></table></figure>
-<p>###结论：</p>
-<p>1.假如只需要遍历Key的话，因为实现没有太大区别，所以两种方式速度上实现其实是差不多的</p>
+<h3 id="结论："><a href="#结论：" class="headerlink" title="结论："></a>结论：</h3><p>1.假如只需要遍历Key的话，因为实现没有太大区别，所以两种方式速度上实现其实是差不多的</p>
 <p>2.假如需要同时遍历Key和Value的话，推荐用通过entrySet()</p>
 
       
@@ -458,21 +403,21 @@
       
         <p>抄自<a href="http://henter.me/post/ruby-rvm-gem-rake-bundle-rails.html" target="_blank" rel="external">http://henter.me/post/ruby-rvm-gem-rake-bundle-rails.html</a></p>
 <p>最近在看一个Rails项目，渐渐的接触到Ruby语言，其中有些概念之前比较混乱，模棱两可，相信也有人跟我一样，刚开始学ruby时对这些概念不太清晰，现在整理一下。</p>
-<p>###Ruby<br>这个就不用多说了</p>
-<p>###RVM<br>用于帮你安装Ruby环境，帮你管理多个Ruby环境，帮你管理你开发的每个Ruby应用使用机器上哪个Ruby环境。Ruby环境不仅仅是Ruby本身，还包括依赖的第三方Ruby插件。都由RVM管理。</p>
-<p>###Rails<br>这个也不用多说，著名开发框架。详细看 <a href="http://zh.wikipedia.org/wiki/Ruby_on_Rails" target="_blank" rel="external">http://zh.wikipedia.org/wiki/Ruby_on_Rails</a></p>
-<p>###RubyGems<br>RubyGems是一个方便而强大的Ruby程序包管理器（ package manager），类似RedHat的RPM.它将一个Ruby应用程序打包到一个gem里，作为一个安装单元。无需安装，最新的Ruby版本已经包含RubyGems了。</p>
-<p>###Gem<br>Gem是封装起来的Ruby应用程序或代码库。</p>
+<h3 id="Ruby"><a href="#Ruby" class="headerlink" title="Ruby"></a>Ruby</h3><p>这个就不用多说了</p>
+<h3 id="RVM"><a href="#RVM" class="headerlink" title="RVM"></a>RVM</h3><p>用于帮你安装Ruby环境，帮你管理多个Ruby环境，帮你管理你开发的每个Ruby应用使用机器上哪个Ruby环境。Ruby环境不仅仅是Ruby本身，还包括依赖的第三方Ruby插件。都由RVM管理。</p>
+<h3 id="Rails"><a href="#Rails" class="headerlink" title="Rails"></a>Rails</h3><p>这个也不用多说，著名开发框架。详细看 <a href="http://zh.wikipedia.org/wiki/Ruby_on_Rails" target="_blank" rel="external">http://zh.wikipedia.org/wiki/Ruby_on_Rails</a></p>
+<h3 id="RubyGems"><a href="#RubyGems" class="headerlink" title="RubyGems"></a>RubyGems</h3><p>RubyGems是一个方便而强大的Ruby程序包管理器（ package manager），类似RedHat的RPM.它将一个Ruby应用程序打包到一个gem里，作为一个安装单元。无需安装，最新的Ruby版本已经包含RubyGems了。</p>
+<h3 id="Gem"><a href="#Gem" class="headerlink" title="Gem"></a>Gem</h3><p>Gem是封装起来的Ruby应用程序或代码库。</p>
 <p>注：在终端使用的gem命令，是指通过RubyGems管理Gem包。</p>
-<p>###Gemfile<br>定义你的应用依赖哪些第三方包，bundle根据该配置去寻找这些包。</p>
-<p>###Rake<br>Rake是一门构建语言，和make类似。Rake是用Ruby写的，它支持自己的DSL用来处理和维护Ruby程序。 Rails用rake扩展来完成多种不容任务，如数据库初始化、更新等。</p>
+<h3 id="Gemfile"><a href="#Gemfile" class="headerlink" title="Gemfile"></a>Gemfile</h3><p>定义你的应用依赖哪些第三方包，bundle根据该配置去寻找这些包。</p>
+<h3 id="Rake"><a href="#Rake" class="headerlink" title="Rake"></a>Rake</h3><p>Rake是一门构建语言，和make类似。Rake是用Ruby写的，它支持自己的DSL用来处理和维护Ruby程序。 Rails用rake扩展来完成多种不容任务，如数据库初始化、更新等。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Rake is a build language, similar in purpose to make and ant. Like make and ant it&apos;s a Domain Specific Language, unlike those two it&apos;s an internal DSL programmed in the Ruby language.</div></pre></td></tr></table></figure>
 <p>PS：个人感觉有点类似Symfony2中的app/console</p>
 <p>详细 <a href="http://rake.rubyforge.org/" target="_blank" rel="external">http://rake.rubyforge.org/</a></p>
-<p>###Rakefile<br>Rakefile是由Ruby编写，Rake的命令执行就是由Rakefile文件定义。</p>
+<h3 id="Rakefile"><a href="#Rakefile" class="headerlink" title="Rakefile"></a>Rakefile</h3><p>Rakefile是由Ruby编写，Rake的命令执行就是由Rakefile文件定义。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">In a gem’s context, the Rakefile is extremely useful. It can hold various tasks to help building, testing and debugging your gem, among all other things that you might find useful.</div></pre></td></tr></table></figure>
 <p>详细：<a href="http://rake.rubyforge.org/files/doc/rakefile_rdoc.html" target="_blank" rel="external">http://rake.rubyforge.org/files/doc/rakefile_rdoc.html</a></p>
-<p>###Bundle<br>相当于多个RubyGems批处理运行。在配置文件gemfilel里说明你的应用依赖哪些第三方包，他自动帮你下载安装多个包，并且会下载这些包依赖的包。</p>
+<h3 id="Bundle"><a href="#Bundle" class="headerlink" title="Bundle"></a>Bundle</h3><p>相当于多个RubyGems批处理运行。在配置文件gemfilel里说明你的应用依赖哪些第三方包，他自动帮你下载安装多个包，并且会下载这些包依赖的包。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Bundler maintains a consistent environment for ruby applications. It tracks an application&apos;s code and the rubygems it needs to run, so that an application will always have the exact gems (and versions) that it needs to run.</div></pre></td></tr></table></figure>
 
       
