@@ -4,14 +4,24 @@
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>ian的Blog</title>
+  <title>HashMap两种遍历方式的比较 | ian的Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="ian的Blog">
-<meta property="og:url" content="http://yinyien.com/index.html">
+  <meta name="description" content="#HashMap两种遍历方式的比较
+###第一种方式：通过keySet()方式遍历
+12345678910HashMap hashmap = new HashMap();for (int i = 0; i &amp;lt; 10000000; i++ ) &amp;#123;hashmap.put(&quot;&quot; +i, &quot;thanks&quot; + i);&amp;#125;long bs = Calendar.getInstance(">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HashMap两种遍历方式的比较">
+<meta property="og:url" content="http://yinyien.com/2016/01/04/2016-1-4-six/index.html">
 <meta property="og:site_name" content="ian的Blog">
+<meta property="og:description" content="#HashMap两种遍历方式的比较
+###第一种方式：通过keySet()方式遍历
+12345678910HashMap hashmap = new HashMap();for (int i = 0; i &amp;lt; 10000000; i++ ) &amp;#123;hashmap.put(&quot;&quot; +i, &quot;thanks&quot; + i);&amp;#125;long bs = Calendar.getInstance(">
+<meta property="og:updated_time" content="2016-07-15T09:12:19.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="ian的Blog">
+<meta name="twitter:title" content="HashMap两种遍历方式的比较">
+<meta name="twitter:description" content="#HashMap两种遍历方式的比较
+###第一种方式：通过keySet()方式遍历
+12345678910HashMap hashmap = new HashMap();for (int i = 0; i &amp;lt; 10000000; i++ ) &amp;#123;hashmap.put(&quot;&quot; +i, &quot;thanks&quot; + i);&amp;#125;long bs = Calendar.getInstance(">
   
     <link rel="alternative" href="/atom.xml" title="ian的Blog" type="application/atom+xml">
   
@@ -183,188 +193,7 @@
 	</div>
 </nav>
 
-      <div class="body-wrap">
-  
-    <article id="post-first" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/07/15/first/" class="article-date">
-  	<time datetime="2016-07-15T08:49:18.000Z" itemprop="datePublished">2016-07-15</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/07/15/first/">第一篇文章</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>欢迎来到我的blog，感谢Hexo提供工具，感谢Litten提供模板，谢谢大家</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-2015-11-20-five" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/02/02/2015-11-20-five/" class="article-date">
-  	<time datetime="2016-02-02T07:56:49.000Z" itemprop="datePublished">2016-02-02</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/02/02/2015-11-20-five/">（转）Mac 设置环境变量path的几种方法</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>源引：<a href="http://www.th7.cn/system/mac/201409/70274.shtml" target="_blank" rel="external">http://www.th7.cn/system/mac/201409/70274.shtml</a></p>
-<p>mac 一般使用bash作为默认shell</p>
-<p>Mac系统的环境变量，加载顺序为：</p>
-<p>/etc/profile /etc/paths ~/.bash_profile ~/.bash_login ~/.profile ~/.bashrc</p>
-<p>当然/etc/profile和/etc/paths是系统级别的，系统启动就会加载，后面几个是当前用户级的环境变量。后面3个按照从前往后的顺序读取，如果~/.bash_profile文件存在，则后面的几个文件就会被忽略不读了，如果~/.bash_profile文件不存在，才会以此类推读取后面的文件。~/.bashrc没有上述规则，它是bash shell打开的时候载入的。</p>
-<p>如果没特殊说明,设置PATH的语法都为：——————————————————-</p>
-<p>中间用冒号隔开 export PATH=$PATH:<path 1=""></path>:<path 2=""></path>:<path 3=""></path>:——:<path n=""></path></p>
-<p>（一）全局设置下面的几个文件设置是全局的，修改时需要root权限</p>
-<p>1）/etc/paths （全局建议修改这个文件 ）<br>编辑 paths，将环境变量添加到 paths文件中 ，一行一个路径<br>Hint：输入环境变量时，不用一个一个地输入，只要拖动文件夹到 Terminal 里就可以了。</p>
-<p>2）/etc/profile （建议不修改这个文件 ）全局（公有）配置，不管是哪个用户，登录时都会读取该文件。</p>
-<p>3）/etc/bashrc （一般在这个文件中添加系统级环境变量）全局（公有）配置，bash shell执行时，不管是何种方式，都会读取此文件。</p>
-<p>4）<br>1.创建一个文件：<br>sudo touch /etc/paths.d/mysql</p>
-<p>2.用 vim 打开这个文件（如果是以 open -t 的方式打开，则不允许编辑）：<br>sudo vim /etc/paths.d/mysql</p>
-<p>3.编辑该文件，键入路径并保存（关闭该 Terminal 窗口并重新打开一个，就能使用 mysql 命令了）<br>/usr/local/mysql/bin</p>
-<p>据说，这样可以自己生成新的文件，不用把变量全都放到 paths 一个文件里，方便管理。</p>
-<p>（二）单个用户设置</p>
-<p>1）~/.bash_profile （任意一个文件中添加用户级环境变量）<br>（注：Linux 里面是 .bashrc 而 Mac 是 .bash_profile）<br>若bash shell是以login方式执行时，才会读取此文件。该文件仅仅执行一次!默认情况下,他设置一些环境变量</p>
-<p>设置命令别名alias ll=’ls -la’<br>设置环境变量：</p>
-<p>export PATH=/opt/local/bin:/opt/local/sbin:$PATH<br>2）~/.bashrc 同上<br>如果想立刻生效，则可执行下面的语句：</p>
-<p>$ source 相应的文件</p>
-<p>一般环境变量更改后，重启后生效。</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-2016-2-2-seven" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2016/02/02/2016-2-2-seven/" class="article-date">
-  	<time datetime="2016-02-02T06:36:19.000Z" itemprop="datePublished">2016-02-02</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/02/02/2016-2-2-seven/">Radiohead</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>我是如此的喜欢RadioHead，在某种程度上，他们的音乐时时刻刻激发着我内心的忧郁，让我觉得一切都是冷静的，一切都是没有意义的</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-2016-1-4-six" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-2016-1-4-six" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
       <a href="/2016/01/04/2016-1-4-six/" class="article-date">
@@ -380,12 +209,19 @@
       <header class="article-header">
         
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2016/01/04/2016-1-4-six/">HashMap两种遍历方式的比较</a>
+    <h1 class="article-title" itemprop="name">
+      HashMap两种遍历方式的比较
     </h1>
   
 
       </header>
+      
+      <div class="article-info article-info-post">
+        
+        
+
+        <div class="clearfix"></div>
+      </div>
       
     
     <div class="article-entry" itemprop="articleBody">
@@ -408,210 +244,77 @@
       
     </div>
     
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
   </div>
   
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-2015-11-19-third" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/11/19/2015-11-19-third/" class="article-date">
-  	<time datetime="2015-11-19T09:32:20.000Z" itemprop="datePublished">2015-11-19</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
     
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
+<nav id="article-nav">
+  
+    <a href="/2016/02/02/2016-2-2-seven/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
         
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/11/19/2015-11-19-third/">整理Ruby相关的各种概念（rvm, gem, bundle, rake, rails等）</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>抄自<a href="http://henter.me/post/ruby-rvm-gem-rake-bundle-rails.html" target="_blank" rel="external">http://henter.me/post/ruby-rvm-gem-rake-bundle-rails.html</a></p>
-<p>最近在看一个Rails项目，渐渐的接触到Ruby语言，其中有些概念之前比较混乱，模棱两可，相信也有人跟我一样，刚开始学ruby时对这些概念不太清晰，现在整理一下。</p>
-<p>###Ruby<br>这个就不用多说了</p>
-<p>###RVM<br>用于帮你安装Ruby环境，帮你管理多个Ruby环境，帮你管理你开发的每个Ruby应用使用机器上哪个Ruby环境。Ruby环境不仅仅是Ruby本身，还包括依赖的第三方Ruby插件。都由RVM管理。</p>
-<p>###Rails<br>这个也不用多说，著名开发框架。详细看 <a href="http://zh.wikipedia.org/wiki/Ruby_on_Rails" target="_blank" rel="external">http://zh.wikipedia.org/wiki/Ruby_on_Rails</a></p>
-<p>###RubyGems<br>RubyGems是一个方便而强大的Ruby程序包管理器（ package manager），类似RedHat的RPM.它将一个Ruby应用程序打包到一个gem里，作为一个安装单元。无需安装，最新的Ruby版本已经包含RubyGems了。</p>
-<p>###Gem<br>Gem是封装起来的Ruby应用程序或代码库。</p>
-<p>注：在终端使用的gem命令，是指通过RubyGems管理Gem包。</p>
-<p>###Gemfile<br>定义你的应用依赖哪些第三方包，bundle根据该配置去寻找这些包。</p>
-<p>###Rake<br>Rake是一门构建语言，和make类似。Rake是用Ruby写的，它支持自己的DSL用来处理和维护Ruby程序。 Rails用rake扩展来完成多种不容任务，如数据库初始化、更新等。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Rake is a build language, similar in purpose to make and ant. Like make and ant it&apos;s a Domain Specific Language, unlike those two it&apos;s an internal DSL programmed in the Ruby language.</div></pre></td></tr></table></figure>
-<p>PS：个人感觉有点类似Symfony2中的app/console</p>
-<p>详细 <a href="http://rake.rubyforge.org/" target="_blank" rel="external">http://rake.rubyforge.org/</a></p>
-<p>###Rakefile<br>Rakefile是由Ruby编写，Rake的命令执行就是由Rakefile文件定义。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">In a gem’s context, the Rakefile is extremely useful. It can hold various tasks to help building, testing and debugging your gem, among all other things that you might find useful.</div></pre></td></tr></table></figure>
-<p>详细：<a href="http://rake.rubyforge.org/files/doc/rakefile_rdoc.html" target="_blank" rel="external">http://rake.rubyforge.org/files/doc/rakefile_rdoc.html</a></p>
-<p>###Bundle<br>相当于多个RubyGems批处理运行。在配置文件gemfilel里说明你的应用依赖哪些第三方包，他自动帮你下载安装多个包，并且会下载这些包依赖的包。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Bundler maintains a consistent environment for ruby applications. It tracks an application&apos;s code and the rubygems it needs to run, so that an application will always have the exact gems (and versions) that it needs to run.</div></pre></td></tr></table></figure>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
-    <article id="post-2015-10-20-second" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/10/20/2015-10-20-second/" class="article-date">
-  	<time datetime="2015-10-20T12:19:28.000Z" itemprop="datePublished">2015-10-20</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
+          Radiohead
         
+      </div>
+    </a>
   
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/10/20/2015-10-20-second/">fragment切换时生命周期的变化</a>
-    </h1>
   
+    <a href="/2015/11/19/2015-11-19-third/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">整理Ruby相关的各种概念（rvm, gem, bundle, rake, rails等）</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
 
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>假设有两个fragment，一个是A,一个是B</p>
-<p>1.在A被add之后，再add  B，</p>
-<p>A的生命周期不会被调用，而B将执行正常的生命周期</p>
-<p>2.在A被add之后，再B replace A</p>
-<p>假如把FragmentTransaction加到回退栈里面，AA将执行到onDestoryView方法<br>如果不加，A将直接 onDetach</p>
-<p>3.A被hide，再add B<br>A的生命周期不会被调用，而B将执行正常的生命周期</p>
-<p>和1的区别在于3会有A的退出动画，1没有 </p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
   
 </article>
 
 
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">Share to: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
 
 
 
 
 
 
-
-  
-    <article id="post-2015-09-07-dingding-first" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/09/08/2015-09-07-dingding-first/" class="article-date">
-  	<time datetime="2015-09-08T03:56:56.000Z" itemprop="datePublished">2015-09-08</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/09/08/2015-09-07-dingding-first/">生活本来没有目的</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>我是惦念着你的一个黑色影子</p><br><p>在永恒的二维生命中凝望着三维的你</p><br><p>生活对于我来说本来没有目的</p><br><p>只是因为无意间你在这里</p><br><p>而我，恰好也在这里</p>
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="2016-1-4-six" data-title="HashMap两种遍历方式的比较" data-url="http://yinyien.com/2016/01/04/2016-1-4-six/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
 
 
 
 
-
-
-
-
-
-  
-  
 </div>
       <footer id="footer">
   <div class="outer">
@@ -635,8 +338,8 @@
 		fancybox: true,
 		mathjax: true,
 		animate: true,
-		isHome: true,
-		isPost: false,
+		isHome: false,
+		isPost: true,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,

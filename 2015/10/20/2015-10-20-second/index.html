@@ -4,18 +4,33 @@
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>第一篇文章 | ian的Blog</title>
+  <title>fragment切换时生命周期的变化 | ian的Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="欢迎来到我的blog，感谢Hexo提供工具，感谢Litten提供模板，谢谢大家">
+  <meta name="description" content="假设有两个fragment，一个是A,一个是B
+1.在A被add之后，再add  B，
+A的生命周期不会被调用，而B将执行正常的生命周期
+2.在A被add之后，再B replace A
+假如把FragmentTransaction加到回退栈里面，AA将执行到onDestoryView方法如果不加，A将直接 onDetach
+3.A被hide，再add BA的生命周期不会被调用，而B将执行正常的生命">
 <meta property="og:type" content="article">
-<meta property="og:title" content="第一篇文章">
-<meta property="og:url" content="http://yinyien.com/2016/07/15/first/index.html">
+<meta property="og:title" content="fragment切换时生命周期的变化">
+<meta property="og:url" content="http://yinyien.com/2015/10/20/2015-10-20-second/index.html">
 <meta property="og:site_name" content="ian的Blog">
-<meta property="og:description" content="欢迎来到我的blog，感谢Hexo提供工具，感谢Litten提供模板，谢谢大家">
-<meta property="og:updated_time" content="2016-07-15T08:52:22.000Z">
+<meta property="og:description" content="假设有两个fragment，一个是A,一个是B
+1.在A被add之后，再add  B，
+A的生命周期不会被调用，而B将执行正常的生命周期
+2.在A被add之后，再B replace A
+假如把FragmentTransaction加到回退栈里面，AA将执行到onDestoryView方法如果不加，A将直接 onDetach
+3.A被hide，再add BA的生命周期不会被调用，而B将执行正常的生命">
+<meta property="og:updated_time" content="2016-07-15T09:11:52.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="第一篇文章">
-<meta name="twitter:description" content="欢迎来到我的blog，感谢Hexo提供工具，感谢Litten提供模板，谢谢大家">
+<meta name="twitter:title" content="fragment切换时生命周期的变化">
+<meta name="twitter:description" content="假设有两个fragment，一个是A,一个是B
+1.在A被add之后，再add  B，
+A的生命周期不会被调用，而B将执行正常的生命周期
+2.在A被add之后，再B replace A
+假如把FragmentTransaction加到回退栈里面，AA将执行到onDestoryView方法如果不加，A将直接 onDetach
+3.A被hide，再add BA的生命周期不会被调用，而B将执行正常的生命">
   
     <link rel="alternative" href="/atom.xml" title="ian的Blog" type="application/atom+xml">
   
@@ -187,11 +202,11 @@
 	</div>
 </nav>
 
-      <div class="body-wrap"><article id="post-first" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-2015-10-20-second" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2016/07/15/first/" class="article-date">
-  	<time datetime="2016-07-15T08:49:18.000Z" itemprop="datePublished">2016-07-15</time>
+      <a href="/2015/10/20/2015-10-20-second/" class="article-date">
+  	<time datetime="2015-10-20T12:19:28.000Z" itemprop="datePublished">2015-10-20</time>
 </a>
     </div>
   
@@ -204,7 +219,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      第一篇文章
+      fragment切换时生命周期的变化
     </h1>
   
 
@@ -220,7 +235,13 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>欢迎来到我的blog，感谢Hexo提供工具，感谢Litten提供模板，谢谢大家</p>
+        <p>假设有两个fragment，一个是A,一个是B</p>
+<p>1.在A被add之后，再add  B，</p>
+<p>A的生命周期不会被调用，而B将执行正常的生命周期</p>
+<p>2.在A被add之后，再B replace A</p>
+<p>假如把FragmentTransaction加到回退栈里面，AA将执行到onDestoryView方法<br>如果不加，A将直接 onDetach</p>
+<p>3.A被hide，再add B<br>A的生命周期不会被调用，而B将执行正常的生命周期</p>
+<p>和1的区别在于3会有A的退出动画，1没有 </p>
 
       
     </div>
@@ -230,9 +251,18 @@
     
 <nav id="article-nav">
   
+    <a href="/2015/11/19/2015-11-19-third/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption"><</strong>
+      <div class="article-nav-title">
+        
+          整理Ruby相关的各种概念（rvm, gem, bundle, rake, rails等）
+        
+      </div>
+    </a>
   
-    <a href="/2016/02/02/2015-11-20-five/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">（转）Mac 设置环境变量path的几种方法</div>
+  
+    <a href="/2015/09/08/2015-09-07-dingding-first/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">生活本来没有目的</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -267,7 +297,7 @@
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="first" data-title="第一篇文章" data-url="http://yinyien.com/2016/07/15/first/"></div>
+	<div class="ds-thread" data-thread-key="2015-10-20-second" data-title="fragment切换时生命周期的变化" data-url="http://yinyien.com/2015/10/20/2015-10-20-second/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
