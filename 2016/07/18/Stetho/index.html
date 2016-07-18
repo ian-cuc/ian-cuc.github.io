@@ -7,21 +7,24 @@
   <title>Stetho原理及功能解析 | ian的Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="[TOC]
-概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。
-Stetho">
+概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho, 首页有一个简介：
+
+Stetho is a sophisticated debug bridge for Android applications. When enabled, developers have access to">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Stetho原理及功能解析">
 <meta property="og:url" content="http://www.yinyien.com/2016/07/18/Stetho/index.html">
 <meta property="og:site_name" content="ian的Blog">
 <meta property="og:description" content="[TOC]
-概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。
-Stetho">
-<meta property="og:updated_time" content="2016-07-18T03:50:08.000Z">
+概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho, 首页有一个简介：
+
+Stetho is a sophisticated debug bridge for Android applications. When enabled, developers have access to">
+<meta property="og:updated_time" content="2016-07-18T03:54:52.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Stetho原理及功能解析">
 <meta name="twitter:description" content="[TOC]
-概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。
-Stetho">
+概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho, 首页有一个简介：
+
+Stetho is a sophisticated debug bridge for Android applications. When enabled, developers have access to">
   
     <link rel="alternative" href="/atom.xml" title="ian的Blog" type="application/atom+xml">
   
@@ -219,9 +222,12 @@ Stetho">
     <div class="article-entry" itemprop="articleBody">
       
         <p>[TOC]</p>
-<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Stetho是一个facebook出品的一个强大调试工具，具体的github地址在<a href="https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome" target="_blank" rel="external">https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome</a> Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Stetho是一个facebook出品的一个强大调试工具，具体的github地址在<a href="https://github.com/facebook/stetho" target="_blank" rel="external">https://github.com/facebook/stetho</a>, 首页有一个简介：</p>
+<blockquote>
 <p>Stetho is a sophisticated debug bridge for Android applications. When enabled, developers have access to the Chrome Developer Tools feature natively part of the Chrome desktop browser. Developers can also choose to enable the optional dumpapp tool which offers a powerful command-line interface to application internals.</p>
 <p>Once you complete the set-up instructions below, just start your app and point your laptop browser to chrome://inspect. Click the “Inspect” button to begin.</p>
+</blockquote>
+<p>大概意思就是说Stetho是一款可以用Chrome Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。</p>
 <h2 id="具体功能"><a href="#具体功能" class="headerlink" title="具体功能"></a>具体功能</h2><ul>
 <li>完整显示APP视图树，支持实时对视图属性进行修改</li>
 <li>实时投射APP屏幕内容到Chrome</li>
