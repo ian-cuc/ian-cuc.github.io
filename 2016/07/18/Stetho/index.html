@@ -4,18 +4,24 @@
   <meta charset="utf-8">
   
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <title>Radiohead | ian的Blog</title>
+  <title>Stetho原理及功能解析 | ian的Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="我是如此的喜欢RadioHead，在某种程度上，他们的音乐时时刻刻激发着我内心的忧郁，让我觉得一切都是冷静的，一切都是没有意义的">
+  <meta name="description" content="[TOC]
+概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。
+Stetho">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Radiohead">
-<meta property="og:url" content="http://www.yinyien.com/2016/02/02/2016-2-2-seven/index.html">
+<meta property="og:title" content="Stetho原理及功能解析">
+<meta property="og:url" content="http://www.yinyien.com/2016/07/18/Stetho/index.html">
 <meta property="og:site_name" content="ian的Blog">
-<meta property="og:description" content="我是如此的喜欢RadioHead，在某种程度上，他们的音乐时时刻刻激发着我内心的忧郁，让我觉得一切都是冷静的，一切都是没有意义的">
-<meta property="og:updated_time" content="2016-07-15T09:12:28.000Z">
+<meta property="og:description" content="[TOC]
+概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。
+Stetho">
+<meta property="og:updated_time" content="2016-07-18T03:50:08.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Radiohead">
-<meta name="twitter:description" content="我是如此的喜欢RadioHead，在某种程度上，他们的音乐时时刻刻激发着我内心的忧郁，让我觉得一切都是冷静的，一切都是没有意义的">
+<meta name="twitter:title" content="Stetho原理及功能解析">
+<meta name="twitter:description" content="[TOC]
+概述Stetho是一个facebook出品的一个强大调试工具，具体的github地址在https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。
+Stetho">
   
     <link rel="alternative" href="/atom.xml" title="ian的Blog" type="application/atom+xml">
   
@@ -175,11 +181,11 @@
 	</div>
 </nav>
 
-      <div class="body-wrap"><article id="post-2016-2-2-seven" class="article article-type-post" itemscope itemprop="blogPost">
+      <div class="body-wrap"><article id="post-Stetho" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
-      <a href="/2016/02/02/2016-2-2-seven/" class="article-date">
-  	<time datetime="2016-02-02T06:36:19.000Z" itemprop="datePublished">2016-02-02</time>
+      <a href="/2016/07/18/Stetho/" class="article-date">
+  	<time datetime="2016-07-18T03:49:39.000Z" itemprop="datePublished">2016-07-18</time>
 </a>
     </div>
   
@@ -192,7 +198,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      Radiohead
+      Stetho原理及功能解析
     </h1>
   
 
@@ -200,6 +206,10 @@
       
       <div class="article-info article-info-post">
         
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/调试-Android/">调试, Android</a></li></ul>
+	</div>
+
         
 
         <div class="clearfix"></div>
@@ -208,7 +218,27 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>我是如此的喜欢RadioHead，在某种程度上，他们的音乐时时刻刻激发着我内心的忧郁，让我觉得一切都是冷静的，一切都是没有意义的</p>
+        <p>[TOC]</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Stetho是一个facebook出品的一个强大调试工具，具体的github地址在<a href="https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome" target="_blank" rel="external">https://github.com/facebook/stetho，首页上是这么介绍的，大概意思就是说Stetho是一款可以用Chrome</a> Developer Tools像调试网页一样调试android app，并且也可以用’dumpapp tool’的命令行工具来访问app的内部。</p>
+<p>Stetho is a sophisticated debug bridge for Android applications. When enabled, developers have access to the Chrome Developer Tools feature natively part of the Chrome desktop browser. Developers can also choose to enable the optional dumpapp tool which offers a powerful command-line interface to application internals.</p>
+<p>Once you complete the set-up instructions below, just start your app and point your laptop browser to chrome://inspect. Click the “Inspect” button to begin.</p>
+<h2 id="具体功能"><a href="#具体功能" class="headerlink" title="具体功能"></a>具体功能</h2><ul>
+<li>完整显示APP视图树，支持实时对视图属性进行修改</li>
+<li>实时投射APP屏幕内容到Chrome</li>
+<li>查看网络请求，内置支持多种网络请求库</li>
+<li>SharedPreference的查看和编辑</li>
+<li>SQLite查看和调试，支持在Chrome内对数据库执行SQL查询</li>
+<li>ContentProvider类数据库方式查询</li>
+</ul>
+<h2 id="初步思考"><a href="#初步思考" class="headerlink" title="初步思考"></a>初步思考</h2><p>抽象来看，我们可以理解为stetho提供了一个在Chrome Developer Tools查看app内部数据的服务，既然是一个数据服务，那么就包含了，</p>
+<ul>
+<li>数据的产生</li>
+<li>数据的传递</li>
+<li>数据的组织</li>
+<li>数据的展示</li>
+</ul>
+<p>所以我们分四个类别来解释Stetho的运行原理，首先介绍数据的传递，为什么不按顺序呢，因为数据的传递最初是最让我迷惑的，推己及人，所以先介绍数据的传递</p>
+<h2 id="数据的传递"><a href="#数据的传递" class="headerlink" title="数据的传递"></a>数据的传递</h2><p>最初看到这个工具的时候，我就很迷惑，这些数据怎么传到Chrome Developer Tools上去的。</p>
 
       
     </div>
@@ -218,18 +248,9 @@
     
 <nav id="article-nav">
   
-    <a href="/2016/02/02/2015-11-20-five/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption"><</strong>
-      <div class="article-nav-title">
-        
-          （转）Mac 设置环境变量path的几种方法
-        
-      </div>
-    </a>
   
-  
-    <a href="/2016/01/04/2016-1-4-six/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">HashMap两种遍历方式的比较</div>
+    <a href="/2016/02/02/2015-11-20-five/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">（转）Mac 设置环境变量path的几种方法</div>
       <strong class="article-nav-caption">></strong>
     </a>
   
@@ -264,7 +285,7 @@
 
 <div class="duoshuo">
 	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="2016-2-2-seven" data-title="Radiohead" data-url="http://www.yinyien.com/2016/02/02/2016-2-2-seven/"></div>
+	<div class="ds-thread" data-thread-key="Stetho" data-title="Stetho原理及功能解析" data-url="http://www.yinyien.com/2016/07/18/Stetho/"></div>
 	<!-- 多说评论框 end -->
 	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
 	<script type="text/javascript">
