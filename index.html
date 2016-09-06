@@ -74,7 +74,7 @@
 						<li>Links</li>
 						
 						
-						<li>Über</li>
+						<li>About</li>
 						
 					</ul>
 				</div>
@@ -91,6 +91,8 @@
 				        
 							<li><a href="/archives">所有文章</a></li>
 				        
+							<li><a href="/tags/随笔">随笔</a></li>
+				        
 						</ul>
 					</nav>
 					<nav class="header-nav">
@@ -105,7 +107,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/android/" style="font-size: 20px;">android</a> <a href="/tags/java/" style="font-size: 10px;">java</a> <a href="/tags/mac/" style="font-size: 10px;">mac</a> <a href="/tags/music/" style="font-size: 10px;">music</a> <a href="/tags/welcome/" style="font-size: 10px;">welcome</a> <a href="/tags/调试工具/" style="font-size: 10px;">调试工具</a>
+						<a href="/tags/Android/" style="font-size: 10px;">Android</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/android/" style="font-size: 20px;">android</a> <a href="/tags/java/" style="font-size: 15px;">java</a> <a href="/tags/mac/" style="font-size: 10px;">mac</a> <a href="/tags/music/" style="font-size: 10px;">music</a> <a href="/tags/welcome/" style="font-size: 10px;">welcome</a> <a href="/tags/源码解析/" style="font-size: 10px;">源码解析</a> <a href="/tags/调试工具/" style="font-size: 10px;">调试工具</a>
 					</div>
 				</section>
 				
@@ -157,6 +159,8 @@
 		        
 					<li><a href="/archives">所有文章</a></li>
 		        
+					<li><a href="/tags/随笔">随笔</a></li>
+		        
 		        <div class="clearfix"></div>
 				</ul>
 			</nav>
@@ -172,6 +176,363 @@
 </nav>
 
       <div class="body-wrap">
+  
+    <article id="post-headerGridView" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/09/06/headerGridView/" class="article-date">
+  	<time datetime="2016-09-06T02:21:09.000Z" itemprop="datePublished">2016-09-06</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/09/06/headerGridView/">HeaderGridView原理研究</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>#初衷<br>写下本篇文章的初衷，是因为之前的代码使用了控件<a href="https://github.com/liaohuqiu/android-GridViewWithHeaderAndFooter" target="_blank" rel="external">GridViewWithHeaderAndFooter</a>，而我在扩展功能的时候踩了一个坑，踩的我痛心疾首，所以进行了一番了解</p>
+<p>#坑<br>这个坑很简单，在使用控件<a href="https://github.com/liaohuqiu/android-GridViewWithHeaderAndFooter" target="_blank" rel="external">GridViewWithHeaderAndFooter</a>的过程中，为GridView添加了两个header，然后动态的隐藏某一个header，GridView的的视图在4.0.3上没有按预想之中向上调整。由于GridViewWithHeaderAndFooter是在Google提供的HeaderGridView的基础上扩展的，原理都是一样的，果不其然，HeaderGridView也有同样的问题，所以我们直接看HeaderGridView的<a href="https://android.googlesource.com/platform/packages/apps/Gallery2/+/idea133/src/com/android/photos/views/HeaderGridView.java" target="_blank" rel="external">源码</a></p>
+<p>#查找思路<br>最开始，我觉得这个地方可能是grideview的Item的高度没有调整，所以猜想是onMeasure方法对高度进行了某种操作，所以查看了一下源码的onMeasure方法。<br>代码中Gridview的onMeasure方法被重载了，如图：<br><img src="http://img2.tbcdn.cn/L1/461/1/53a5e17be70de5a2f2be1096f315854e93e583e8" alt="header1"><br>装载header的layout的的onMeasure方法，如图：<br><img src="http://img2.tbcdn.cn/L1/461/1/1dfa02df7f229f15d7311092ee0659aeb9719539" alt="header2"><br>可以看到，两个onMeasure方法只是只是在宽度上做了调整，并没有对高度做任何操作，所以我很迷惑，所以就开始完整的看了一下这个控件的实现添加header的原理是什么。</p>
+<p>#HeaderGridView原理<br>首先我们看一下addHeader方法，HeaderGridView把添加进来的header的相关信息保存在一个自定义的FixedViewInfo中，然后把FixedViewInfo保存在了一个数组之中，之后就notifyDataSetChanged<br><img src="http://img2.tbcdn.cn/L1/461/1/53b6aa3d35c5bdbc73554393dc66149ff76979d6" alt="addheader"><br>notifyDataSetChanged会重新去绘制这个gridview所以这个时候，我们需要查看一下getView方法（注释的代码是我后来为了查问题加上的）<br><img src="http://img2.tbcdn.cn/L1/461/1/88186a64b58f047deec570d85ff82eb90f449354" alt="getview"></p>
+<p>这里果然有header如何显示的秘密，事实上HeaderGridView是把每行的第一个设为headerView，然后把这一行之后的itemView都设做和headerView等高，然后把这些itemView设置为INVISIBLE，等于说只占位，不显示，所以headerView就能把这一行占满，从而做到了添加header。<br>这里面有一句话引起了我的注意<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">// We need to do this because GridView uses the height of the last item</div><div class="line"> // in a row to determine the height for the entire row.</div></pre></td></tr></table></figure></p>
+<p>大意是GridView会用每一行的最后一个item来决定这一行有多高，说明这里才会决定每一行有多高，所以上面的那个坑很可能是这里的代码导致的，而决定高度的代码一共也只有下面这一行。所以我们想可能是这个地方的实现在4.0.3有所区别<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">convertView.setMinimumHeight(headerViewContainer.getHeight());</div></pre></td></tr></table></figure></p>
+<p>5.0的setMinimumHeight<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">public void setMinimumHeight(int minHeight) &#123;</div><div class="line">    mMinHeight = minHeight;</div><div class="line">    requestLayout();</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>4.0.3的setMinimumHeight<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public void setMinimumHeight(int minHeight) &#123;</div><div class="line">    mMinHeight = minHeight;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>4.0.3比少了一行关键的代码，所以导致了每一行第一个之后的item高度都没有更新，所以这个坑也就得到了解释。添加了requestLayout()之后果然解决了这个问题。</p>
+<p>#requestLayout()<br>解决完这个问题之后，又有一个新的问题在我的心里萦绕，为什么调用了requestLayout()之后就解决了这个问题呢？<br>事实上，在最初想要解决这个问题的时候，我无论是对headerView.requestLayout()还是对gridView.requestLayout()都没有起到任何作用，在我之前的印象中，requestLayout()会一直向上调用到ViewRootImpl，从头measure，但是，为什么没有measure到item呢？</p>
+<p>这个问题需要我们探究一下requestLayout()的源码，调用了requestLayout()会先把当前view的标志位置为PFLAG_FORCE_LAYOUT和PFLAG_INVALIDATED，然后才会向上调用requestLayout()，从字面上理解，这两个标志位是要强制layout当前的view，并把view设做invalidated。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">public void requestLayout() &#123;</div><div class="line">    if (mMeasureCache != null) mMeasureCache.clear();</div><div class="line"></div><div class="line">    if (mAttachInfo != null &amp;&amp; mAttachInfo.mViewRequestingLayout == null) &#123;</div><div class="line">        // Only trigger request-during-layout logic if this is the view requesting it,</div><div class="line">        // not the views in its parent hierarchy</div><div class="line">        ViewRootImpl viewRoot = getViewRootImpl();</div><div class="line">        if (viewRoot != null &amp;&amp; viewRoot.isInLayout()) &#123;</div><div class="line">            if (!viewRoot.requestLayoutDuringLayout(this)) &#123;</div><div class="line">                return;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        mAttachInfo.mViewRequestingLayout = this;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    mPrivateFlags |= PFLAG_FORCE_LAYOUT;</div><div class="line">    mPrivateFlags |= PFLAG_INVALIDATED;</div><div class="line"></div><div class="line">    if (mParent != null &amp;&amp; !mParent.isLayoutRequested()) &#123;</div><div class="line">        mParent.requestLayout();</div><div class="line">    &#125;</div><div class="line">    if (mAttachInfo != null &amp;&amp; mAttachInfo.mViewRequestingLayout == this) &#123;</div><div class="line">        mAttachInfo.mViewRequestingLayout = null;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>在ViewRootImpl的requestLayout()中会重新向下measure，我们知道，在父view中会遍历调用子view的measure方法，那么，其他item的measuer应该调用到了才对啊。<br>所以我们看一看view的measure方法的关键代码，只有满足一个条件才会去重新measure，一个是有PFLAG_FORCE_LAYOUT的标签，还有一个是<br>widthMeasureSpec或者heightMeasureSpec变了。<br>因为在requestLayout()中已经有了PFLAG_FORCE_LAYOUT的标志位，所以调用requestLayout()的view肯定会重新measure。<br>而为什么其他item就算没有PFLAG_FORCE_LAYOUT，但是明明也调用了setMinimumHeight了呀，为什么MeasureSpec不算改变了呢？事实上，通过看源码，mMinHeight只是用来限制view的的高度下限的，并不会直接导致MeasureSpec，而这里，item的高度并没有小于新设置的mMinHeight，所以MeasureSpec也没有变，所以没有触发其他item的measure，从而导致了4.0.3上的这个问题。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">if ((mPrivateFlags &amp; PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT ||</div><div class="line">        widthMeasureSpec != mOldWidthMeasureSpec ||</div><div class="line">        heightMeasureSpec != mOldHeightMeasureSpec) &#123;</div><div class="line"></div><div class="line">    // first clears the measured dimension flag</div><div class="line">    mPrivateFlags &amp;= ~PFLAG_MEASURED_DIMENSION_SET;</div><div class="line"></div><div class="line">    resolveRtlPropertiesIfNeeded();</div><div class="line"></div><div class="line">    int cacheIndex = (mPrivateFlags &amp; PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT ? -1 :</div><div class="line">            mMeasureCache.indexOfKey(key);</div><div class="line">    if (cacheIndex &lt; 0 || sIgnoreMeasureCache) &#123;</div><div class="line">        // measure ourselves, this should set the measured dimension flag back</div><div class="line">        onMeasure(widthMeasureSpec, heightMeasureSpec);</div><div class="line">        mPrivateFlags3 &amp;= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;</div><div class="line">    &#125; else &#123;</div><div class="line">        long value = mMeasureCache.valueAt(cacheIndex);</div><div class="line">        // Casting a long to int drops the high 32 bits, no mask needed</div><div class="line">        setMeasuredDimensionRaw((int) (value &gt;&gt; 32), (int) value);</div><div class="line">        mPrivateFlags3 |= PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    // flag not set, setMeasuredDimension() was not invoked, we raise</div><div class="line">    // an exception to warn the developer</div><div class="line">    if ((mPrivateFlags &amp; PFLAG_MEASURED_DIMENSION_SET) != PFLAG_MEASURED_DIMENSION_SET) &#123;</div><div class="line">        throw new IllegalStateException(&quot;View with id &quot; + getId() + &quot;: &quot;</div><div class="line">                + getClass().getName() + &quot;#onMeasure() did not set the&quot;</div><div class="line">                + &quot; measured dimension by calling&quot;</div><div class="line">                + &quot; setMeasuredDimension()&quot;);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    mPrivateFlags |= PFLAG_LAYOUT_REQUIRED;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>#小结<br>源码之前,了无秘密啊</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/android/">android</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/源码解析/">源码解析</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
+    <article id="post-java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/07/27/java内存模型/" class="article-date">
+  	<time datetime="2016-07-27T03:46:07.000Z" itemprop="datePublished">2016-07-27</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/07/27/java内存模型/">Java内存模型</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Java内存模型"><a href="#Java内存模型" class="headerlink" title="Java内存模型"></a>Java内存模型</h2><h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h2><p>　　多任务和高并发是衡量一台计算机处理器的能力重要指标之一。一般衡量一个服务器性能的高低好坏，使用每秒事务处理数（Transactions Per Second，TPS）这个指标比较能说明问题，它代表着一秒内服务器平均能响应的请求数，而TPS值与程序的并发能力有着非常密切的关系。在讨论Java内存模型和线程之前，先简单介绍一下硬件的效率与一致性。</p>
+<h2 id="2-硬件的效率与一致性"><a href="#2-硬件的效率与一致性" class="headerlink" title="2.硬件的效率与一致性"></a>2.硬件的效率与一致性</h2><p>　　由于计算机的存储设备与处理器的运算能力之间有几个数量级的差距，所以现代计算机系统都不得不加入一层读写速度尽可能接近处理器运算速度的高速缓存（cache）来作为内存与处理器之间的缓冲：将运算需要使用到的数据复制到缓存中，让运算能快速进行，当运算结束后再从缓存同步回内存之中没这样处理器就无需等待缓慢的内存读写了。<br>　　基于高速缓存的存储交互很好地解决了处理器与内存的速度矛盾，但是引入了一个新的问题：缓存一致性（Cache Coherence）。在多处理器系统中，每个处理器都有自己的高速缓存，而他们又共享同一主存，如下图所示：多个处理器运算任务都涉及同一块主存，需要一种协议可以保障数据的一致性，这类协议有MSI、MESI、MOSI及Dragon Protocol等。Java虚拟机内存模型中定义的内存访问操作与硬件的缓存访问操作是具有可比性的，后续将介绍Java内存模型。</p>
+<p><img src="http://images.cnitblog.com/i/475287/201403/091102484251967.jpg" alt=""></p>
+<p>　　除此之外，为了使得处理器内部的运算单元能竟可能被充分利用，处理器可能会对输入代码进行乱起执行（Out-Of-Order Execution）优化，处理器会在计算之后将对乱序执行的代码进行结果重组，保证结果准确性。与处理器的乱序执行优化类似，Java虚拟机的即时编译器中也有类似的指令重排序（Instruction Recorder）优化。</p>
+<h2 id="3-Java内存模型"><a href="#3-Java内存模型" class="headerlink" title="3.Java内存模型"></a>3.Java内存模型</h2><p>　　定义Java内存模型并不是一件容易的事情，这个模型必须定义得足够严谨，才能让Java的并发操作不会产生歧义；但是，也必须得足够宽松，使得虚拟机的实现能有足够的自由空间去利用硬件的各种特性（寄存器、高速缓存等）来获取更好的执行速度。经过长时间的验证和修补，在JDK1.5发布后，Java内存模型就已经成熟和完善起来了。</p>
+<p>3.1 主内存与工作内存</p>
+<p>　　Java内存模型的主要目标是定义程序中各个变量的访问规则，即在虚拟机中将变量存储到内存和从内存中取出变量这样底层细节。此处的变量与Java编程时所说的变量不一样，指包括了实例字段、静态字段和构成数组对象的元素，但是不包括局部变量与方法参数，后者是线程私有的，不会被共享。</p>
+<p>　　Java内存模型中规定了所有的变量都存储在主内存中，每条线程还有自己的工作内存（可以与前面将的处理器的高速缓存类比），线程的工作内存中保存了该线程使用到的变量到主内存副本拷贝，线程对变量的所有操作（读取、赋值）都必须在工作内存中进行，而不能直接读写主内存中的变量。不同线程之间无法直接访问对方工作内存中的变量，线程间变量值的传递均需要在主内存来完成，线程、主内存和工作内存的交互关系如下图所示，和上图很类似。<br><img src="http://images.cnitblog.com/i/475287/201403/091134177063947.jpg" alt=""></p>
+<p>这里的主内存、工作内存与Java内存区域的Java堆、栈、方法区不是同一层次内存划分。</p>
+<p>3.2 内存间交互操作</p>
+<p>　　关于主内存与工作内存之间的具体交互协议，即一个变量如何从主内存拷贝到工作内存、如何从工作内存同步到主内存之间的实现细节，Java内存模型定义了以下八种操作来完成：</p>
+<ul>
+<li>lock（锁定）：作用于主内存的变量，把一个变量标识为一条线程独占状态。</li>
+<li>unlock（解锁）：作用于主内存变量，把一个处于锁定状态的变量释放出来，释放后的变量才可以被其他线程锁定。</li>
+<li>read（读取）：作用于主内存变量，把一个变量值从主内存传输到线程的工作内存中，以便随后的load动作使用</li>
+<li>load（载入）：作用于工作内存的变量，它把read操作从主内存中得到的变量值放入工作内存的变量副本中。</li>
+<li>use（使用）：作用于工作内存的变量，把工作内存中的一个变量值传递给执行引擎，每当虚拟机遇到一个需要使用变量的值的字节码指令时将会执行这个操作。</li>
+<li>assign（赋值）：作用于工作内存的变量，它把一个从执行引擎接收到的值赋值给工作内存的变量，每当虚拟机遇到一个给变量赋值的字节码指令时执行这个操作。</li>
+<li>store（存储）：作用于工作内存的变量，把工作内存中的一个变量的值传送到主内存中，以便随后的write的操作。</li>
+<li>write（写入）：作用于主内存的变量，它把store操作从工作内存中一个变量的值传送到主内存的变量中。</li>
+</ul>
+<p>　　如果要把一个变量从主内存中复制到工作内存，就需要按顺寻地执行read和load操作，如果把变量从工作内存中同步回主内存中，就要按顺序地执行store和write操作。Java内存模型只要求上述操作必须按顺序执行，而没有保证必须是连续执行。也就是read和load之间，store和write之间是可以插入其他指令的，如对主内存中的变量a、b进行访问时，可能的顺序是read a，read b，load b， load a。Java内存模型还规定了在执行上述八种基本操作时，必须满足如下规则：</p>
+<ul>
+<li>不允许read和load、store和write操作之一单独出现</li>
+<li>不允许一个线程丢弃它的最近assign的操作，即变量在工作内存中改变了之后必须同步到主内存中。</li>
+<li>不允许一个线程无原因地（没有发生过任何assign操作）把数据从工作内存同步回主内存中。</li>
+<li>一个新的变量只能在主内存中诞生，不允许在工作内存中直接使用一个未被初始化（load或assign）的变量。即就是对一个变量实施use和store操作之前，必须先执行过了assign和load操作。</li>
+<li>一个变量在同一时刻只允许一条线程对其进行lock操作，lock和unlock必须成对出现</li>
+<li>如果对一个变量执行lock操作，将会清空工作内存中此变量的值，在执行引擎使用这个变量前需要重新执行load或assign操作初始化变量的值</li>
+<li>如果一个变量事先没有被lock操作锁定，则不允许对它执行unlock操作；也不允许去unlock一个被其他线程锁定的变量。</li>
+<li>对一个变量执行unlock操作之前，必须先把此变量同步到主内存中（执行store和write操作）。</li>
+</ul>
+<h2 id="3-3-重排序"><a href="#3-3-重排序" class="headerlink" title="3.3 重排序"></a>3.3 重排序</h2><p>　　在执行程序时为了提高性能，编译器和处理器经常会对指令进行重排序。重排序分成三种类型：</p>
+<ul>
+<li>编译器优化的重排序。编译器在不改变单线程程序语义放入前提下，可以重新安排语句的执行顺序。</li>
+<li>指令级并行的重排序。现代处理器采用了指令级并行技术来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序。</li>
+<li>内存系统的重排序。由于处理器使用缓存和读写缓冲区，这使得加载和存储操作看上去可能是在乱序执行。<br>从Java源代码到最终实际执行的指令序列，会经过下面三种重排序：</li>
+</ul>
+<p><img src="http://images.cnitblog.com/i/475287/201403/091511346284594.png" alt=""></p>
+<p>   为了保证内存的可见性，Java编译器在生成指令序列的适当位置会插入内存屏障指令来禁止特定类型的处理器重排序。Java内存模型把内存屏障分为LoadLoad、LoadStore、StoreLoad和StoreStore四种：</p>
+<p><img src="http://images.cnitblog.com/i/475287/201403/091516513623330.png" alt="aaa"></p>
+<h2 id="3-4-同步机制"><a href="#3-4-同步机制" class="headerlink" title="3.4 同步机制"></a>3.4 同步机制</h2><p>介绍volatile、synchronized和final</p>
+<h2 id="3-5-原子性、可见性与有序性"><a href="#3-5-原子性、可见性与有序性" class="headerlink" title="3.5 原子性、可见性与有序性"></a>3.5 原子性、可见性与有序性</h2><p>介绍三个特性</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java/">java</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
+    <article id="post-android保活" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/07/27/android保活/" class="article-date">
+  	<time datetime="2016-07-27T01:44:04.000Z" itemprop="datePublished">2016-07-27</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/07/27/android保活/">Android保活</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>一，背景</p>
+<p>Android系统在APP退出后台时系统并不会真正杀掉这个进程，而是将其缓存起来以方便下次能快速启用。在系统内存不足的情况下，系统会依据一套Low Memory Killer机制来杀进程。</p>
+<p>Linux内核会为每一个进程分配一个值，如下，这个值代表进程的优先级，值越大，代表进程优先级越低，那么就越容易被回收，Low Memory Killer就是根据这套机制来决定哪个进程被回收</p>
+<p>普通进程的oom_adj &gt;= 0<br>系统的进程的oom_adj有可能&lt;0</p>
+<p>上面是简单的原理介绍，关于更细的可以参考文章 <a href="http://www.atatech.org/articles/54730" target="_blank" rel="external">http://www.atatech.org/articles/54730</a><br>二，实施方案</p>
+<p>下面重点介绍下对于进程保活，我们可以有哪些手段，这里主要从2个层面进行介绍：</p>
+<p>1，Linux层面</p>
+<p>Linux本身存在am命令，可以通过am命令启动Android中的Activity, Service, BroadcastReceiver等组件</p>
+<p>如： am start -a android.intent.action.VIEW -d <a href="http://www.baidu.com" target="_blank" rel="external">http://www.baidu.com</a> </p>
+<pre><code>am startservice - a com.xxx.test
+</code></pre><p>具体见 am –help</p>
+<p>因此可以利用它在后台起一个守护进程，然后监听前台service，拉起service等</p>
+<p>2，Android层面</p>
+<p>1），优先级<br>Service中利用startForeground将服务设置为前台，当系统资源紧张时，会优先保留此服务所在的进程。<br>但 sdk &lt; 18 , 直接调用startForeground即可<br>sdk &gt;=18 的，会在通知栏显示service正在运行，这里不要让用户感知，所以这里的实现方式是利用2个同进程的service，利用相同的notificationID， 2个service分别startForeground，然后只在1个service里stopForeground，这样即可去掉通知栏的显示。</p>
+<p>2）属性<br>android:persistent，适用于放在 /system/app下的APP （一般属于预装应用）</p>
+<p>3）返回值<br>Service 中的onStartCommand方法返回值：</p>
+<p>START_STICKY：如果service进程被kill掉，保留service的状态为开始状态，但不保留递送的intent对象。随后系统会尝试重新创建service，由于服务状态为开始状态，所以创建服务后一定会调用onStartCommand(Intent,int,int)方法。如果在此期间没有任何启动命令被传递到service，那么参数Intent将为null。</p>
+<p>START_REDELIVER_INTENT：重传Intent。使用这个返回值时，如果在执行完onStartCommand后，服务被异常kill掉，系统会自动重启该服务，并将Intent的值传入。</p>
+<p>4）广播监听拉起</p>
+<p>A，监听系统事件广播拉起对应的service<br>B，监听android.intent.action.ACTION_TIME_TICK广播拉起，注：不能在AndroidManifest注册，只能通过代码注册</p>
+<p>5）自身销毁拉起</p>
+<p>Service的onDestroy方法中调起</p>
+<p>6）矩阵互保</p>
+<p>通过AIDL的方式拉起对应的service</p>
+<p>7）利用AlarmManager, WakeLock 间隔性唤醒进程，但需要考虑耗电情况</p>
+<p>注：每个事情有利就会有弊，千万不要以为我们进程存活越久就越好，需要根据业务，场景等综合来评定。<br>关注</p>
+<p>如何保证android进程的存活率，是开发android应用程序的同学都要遇到的问题，常见的方法有setforeground或是采取守护进程。<br>对于采取守护进程，做起来比麻烦，做法上比较流氓，而采用setforeground，似乎不可避免的会在通知栏显示一个通知。</p>
+<p>so, 怎么办？</p>
+<p>在介绍具体的方法之前，先科普下android中进程的优先级，已经了解的同学，可以直接跳到后面。</p>
+<p>android的后台进程为什么会被杀？是因为存在系统中存在一个杀手，叫Low Memory Killer。这个杀手的任务是保证有足够的内存提供给前台程序，当系统内存低于一些阈值的时候，就是天黑请闭眼的时刻。</p>
+<p>在lowmemorykiller.c中，有定义</p>
+<p>static uint32_t lowmem_debug_level = 1;<br>static int lowmem_adj[6] = {<br>    0,<br>    1,<br>    6,<br>    12,<br>};<br>static int lowmem_adj_size = 4;<br>static int lowmem_minfree[6] = {<br>    3 <em> 512,    /</em> 6MB <em>/<br>    2 </em> 1024,   /<em> 8MB </em>/<br>    4 <em> 1024,   /</em> 16MB <em>/<br>    16 </em> 1024,  /<em> 64MB </em>/<br>};<br>static int lowmem_minfree_size = 4;<br>lowmem_minfree是杀进程的时机，谁被杀，则取决于lowmem_adj。<br>那这些0，1，6，12代表什么意思呢，在ProcessList.java，有一些定义</p>
+<p>// Adjustment used in certain places where we don’t know it yet.<br>    // (Generally this is something that is going to be cached, but we<br>    // don’t know the exact value in the cached range to assign yet.)<br>    static final int UNKNOWN_ADJ = 16;</p>
+<pre><code>// This is a process only hosting activities that are not visible,
+// so it can be killed without any disruption.
+static final int CACHED_APP_MAX_ADJ = 15;
+static final int CACHED_APP_MIN_ADJ = 9;
+
+// The B list of SERVICE_ADJ -- these are the old and decrepit
+// services that aren&apos;t as shiny and interesting as the ones in the A list.
+static final int SERVICE_B_ADJ = 8;
+
+// This is the process of the previous application that the user was in.
+// This process is kept above other things, because it is very common to
+// switch back to the previous app.  This is important both for recent
+// task switch (toggling between the two top recent apps) as well as normal
+// UI flow such as clicking on a URI in the e-mail app to view in the browser,
+// and then pressing back to return to e-mail.
+static final int PREVIOUS_APP_ADJ = 7;
+
+// This is a process holding the home application -- we want to try
+// avoiding killing it, even if it would normally be in the background,
+// because the user interacts with it so much.
+static final int HOME_APP_ADJ = 6;
+
+// This is a process holding an application service -- killing it will not
+// have much of an impact as far as the user is concerned.
+static final int SERVICE_ADJ = 5;
+
+// This is a process with a heavy-weight application.  It is in the
+// background, but we want to try to avoid killing it.  Value set in
+// system/rootdir/init.rc on startup.
+static final int HEAVY_WEIGHT_APP_ADJ = 4;
+
+// This is a process currently hosting a backup operation.  Killing it
+// is not entirely fatal but is generally a bad idea.
+static final int BACKUP_APP_ADJ = 3;
+
+// This is a process only hosting components that are perceptible to the
+// user, and we really want to avoid killing them, but they are not
+// immediately visible. An example is background music playback.
+static final int PERCEPTIBLE_APP_ADJ = 2;
+
+// This is a process only hosting activities that are visible to the
+// user, so we&apos;d prefer they don&apos;t disappear.
+static final int VISIBLE_APP_ADJ = 1;
+
+// This is the process running the current foreground app.  We&apos;d really
+// rather not kill it!
+static final int FOREGROUND_APP_ADJ = 0;
+
+// This is a process that the system or a persistent process has bound to,
+// and indicated it is important.
+static final int PERSISTENT_SERVICE_ADJ = -11;
+
+// This is a system persistent process, such as telephony.  Definitely
+// don&apos;t want to kill it, but doing so is not completely fatal.
+static final int PERSISTENT_PROC_ADJ = -12;
+
+// The system process runs at the default adjustment.
+static final int SYSTEM_ADJ = -16;
+
+// Special code for native processes that are not being managed by the system (so
+// don&apos;t have an oom adj assigned by the system).
+static final int NATIVE_ADJ = -17;
+</code></pre><p>简单的说，数字越小，优先级越高，越不容易被杀死。<br>这里说几个标准，-16是系统进程，0是前台进程，这里的前台进程是指用户正在使用的Activity所在的进程，用户按Home键之后回到桌面时的优先级是6，普通Service的进程是8.</p>
+<p>我们先来看下如何查看一个进程的oom_adj值。</p>
+<p>用adb shell登录，比如，我们的进程名是com.tmall.rex.wannakillme，则用以下方法找到进程号PID。</p>
+<p>ps | grep com.tmall.rex.wannakillme<br>比如进程号是13456<br>则使用命令</p>
+<p>cat /proc/13456/oom_adj<br>正常情况下，如果应用程序在前台，这个结果是0，按HOME切后台后，变成6，按BACK后，变成8.</p>
+<p>知道了如何检验成效后，我们来上黑科技代码。</p>
+<p>假设AlwaysLiveService是需要长驻内存的服务，在其onStartCommend中写入以下方法：</p>
+<p>@Override<br>   public int onStartCommand(Intent intent, int flags, int startId) {</p>
+<pre><code>startForeground(R.id.notify, new Notification());
+startService(new Intent(this, TempService.class));
+return super.onStartCommand(intent, flags, startId);
+</code></pre><p>   }<br>其中，TempSerivce为另一个短命的服务, 在这个短命的服务中同样调用startForeground，如下：</p>
+<p>package com.tmall.rex.wannakillme;</p>
+<p>/**</p>
+<ul>
+<li>Created by rexzou on 16/5/12.<br>*/<br>public class TempService extends Service {</li>
+</ul>
+<pre><code>@Nullable
+@Override
+public IBinder onBind(Intent intent) {
+    return null;
+}
+
+
+@Override
+public int onStartCommand(Intent intent, int flags, int startId) {
+    startForeground(R.id.notify, new Notification());
+    stopSelf();
+    return super.onStartCommand(intent, flags, startId);
+}
+
+@Override
+public void onDestroy() {
+    stopForeground(true);
+    super.onDestroy();
+}
+</code></pre><p>}</p>
+<p>有了这两个服务之后，你会惊奇的发现在后台之后oom_adj的值为1.其优先级则紧次于前台进程，又不会很流氓的霸占内存，又没有额外的守护进程开销，算是一种比较优雅的保活方式之一。</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Android/">Android</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
   
     <article id="post-Stetho" class="article article-type-post" itemscope itemprop="blogPost">
   
