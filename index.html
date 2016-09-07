@@ -107,7 +107,7 @@
 				
 				<section class="switch-part switch-part2">
 					<div class="widget tagcloud" id="js-tagcloud">
-						<a href="/tags/Android/" style="font-size: 10px;">Android</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/android/" style="font-size: 20px;">android</a> <a href="/tags/java/" style="font-size: 15px;">java</a> <a href="/tags/mac/" style="font-size: 10px;">mac</a> <a href="/tags/music/" style="font-size: 10px;">music</a> <a href="/tags/welcome/" style="font-size: 10px;">welcome</a> <a href="/tags/源码解析/" style="font-size: 10px;">源码解析</a> <a href="/tags/调试工具/" style="font-size: 10px;">调试工具</a>
+						<a href="/tags/Android/" style="font-size: 10px;">Android</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/android/" style="font-size: 20px;">android</a> <a href="/tags/java/" style="font-size: 20px;">java</a> <a href="/tags/mac/" style="font-size: 10px;">mac</a> <a href="/tags/music/" style="font-size: 10px;">music</a> <a href="/tags/welcome/" style="font-size: 10px;">welcome</a> <a href="/tags/源码解析/" style="font-size: 10px;">源码解析</a> <a href="/tags/调试工具/" style="font-size: 10px;">调试工具</a>
 					</div>
 				</section>
 				
@@ -177,6 +177,104 @@
 
       <div class="body-wrap">
   
+    <article id="post-RecylerView" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2016/09/06/RecylerView/" class="article-date">
+  	<time datetime="2016-09-06T07:00:52.000Z" itemprop="datePublished">2016-09-06</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/09/06/RecylerView/">RecyclerView的源码解析</a>
+    </h1>
+  
+
+      </header>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>之前由于用HeaderGridView踩到坑了，而且HeaderGridView实现Header的方式实在是不够优雅，太trick了，所以就改用了RecyclerView来实现了GridView的Header。</p>
+<p>RecyclerView实现Header的方式根植于RecyclerView的实现方式，但是RecyclerView不仅于此，从名字我们就能看出这个RecyclerView最大的特点是循环，复用。</p>
+<p>对于这个特点的具体实现，在我看来，具体有两点，第一点是控件的复用，第二点是最小化更新。为什么这么说呢？<br>因为控件的复用可以不重复创建控件，然后最小化更新可以不不必多余的去做控件的回收复用操作。</p>
+<h1 id="最小化更新"><a href="#最小化更新" class="headerlink" title="最小化更新"></a>最小化更新</h1><p>因为最小化更新只有一个入口函数，便于我们由点及面的分析代码，所以我们先从最小化更新看起。</p>
+<p>为了能够最小化更新，RecyclerView提供了四种方法（下图前四种方法实际上是在调用后三个方法，只不过后三个参数为1）分别标示改变，插入，和删除Item。</p>
+<pre><code>* @see #notifyItemChanged(int)
+* @see #notifyItemInserted(int)
+* @see #notifyItemRemoved(int)
+* @see #notifyItemMoved(int, int,int)
+* @see #notifyItemRangeChanged(int, int)
+* @see #notifyItemRangeInserted(int, int)
+* @see #notifyItemRangeRemoved(int, int)
+</code></pre><p>这几个方法大同小异<br>首先看一下notifyItemRangeChanged的源码，<br>从字面理解，就是通知从从position之后的itemCount个Item有变更，这有个payload参数，一般都是null，null代表这个Item需要整个更新。但是其实你可以用这个参数来标识item之中的最小化更新，比如你的Item是一个很复杂的view，只想更新里面的一小部分，你可以传入payload，具体使用需要重写onBindViewHolder。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public final void notifyItemRangeChanged(int positionStart, int itemCount, Object payload) &#123;</div><div class="line">    mObservable.notifyItemRangeChanged(positionStart, itemCount, payload);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>notifyItemRangeChanged最终会走到下面的函数。这有个assert，从字面意思很好理解，标识当前是否在Layout（Scroll其实也是因为在重新Layout吧），为什么要做这样一个断言呢？猜测是在Layout的过程中是不准进行notify操作的。但是，基于之前我们对ListView的使用经验，notify和Layout都是在主线程才能调用的，那么这两个操作不可能同时进行啊，所以为什么这个断言是不是有点多余？但是我相信Google的程序员是不会做这种事，基于此，我有一个大胆的猜想，就是RecyclerView的notify操作并不一定需要在主线程进行。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">@Override</div><div class="line">public void onItemRangeChanged(int positionStart, int itemCount, Object payload) &#123;</div><div class="line">    assertNotInLayoutOrScroll(null);</div><div class="line">    if (mAdapterHelper.onItemRangeChanged(positionStart, itemCount, payload)) &#123;</div><div class="line">        triggerUpdateProcessor();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>然后我们看一下mAdapterHelper.onItemRangeChanged做了什么，首先是把操作加入了一个数组里面，然后这个数组大小为1的时候才会为true，这个地方让人费解，等于说只有mPendingUpdates等于1的时候才会进行更新？这个地方又跟之前的assertNotInLayoutOrScroll断言让我隐约的觉得notify操作是可以多线程的。假如notify必须在主线程，那么mPendingUpdates数组根本永远都会为1或者0（layout结束了会清空mPendingUpdates），不会有超过1的时候。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> * @return True if updates should be processed.</div><div class="line"> */</div><div class="line">boolean onItemRangeChanged(int positionStart, int itemCount, Object payload) &#123;</div><div class="line">    mPendingUpdates.add(obtainUpdateOp(UpdateOp.UPDATE, positionStart, itemCount, payload));</div><div class="line">    mExistingUpdateTypes |= UpdateOp.UPDATE;</div><div class="line">    return mPendingUpdates.size() == 1;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>通过了onItemRangeChanged的校验之后，就会进入triggerUpdateProcessor，进入第一个if三个条件分别代表，</p>
+<ul>
+<li>mPostUpdatesOnAnimation 系统版本大于15的时候为true</li>
+<li>mHasFixedSize RecyclerView的大小是否固定</li>
+<li>mIsAttached View有没有attach到window上</li>
+</ul>
+<p>所有说这个if基本上是专门给RangeChanged函数准备的，因为假如你要删除和插入的话mHasFixedSize（mHasFixedSize需要自己设置）肯定就是false了。</p>
+<p>else就进入requestLayout()就比较符合我们的想象了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">void triggerUpdateProcessor() &#123;</div><div class="line">    if (mPostUpdatesOnAnimation &amp;&amp; mHasFixedSize &amp;&amp; mIsAttached) &#123;</div><div class="line">        ViewCompat.postOnAnimation(RecyclerView.this, mUpdateChildViewsRunnable);</div><div class="line">    &#125; else &#123;</div><div class="line">        mAdapterUpdateDuringMeasure = true;</div><div class="line">        requestLayout();</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>剩下的几个最小化更新操作大同小异，Insert和remove操作主要是把UpdateOp的操作类型换成了INSERT和REMOVE，之外的地方都差不多。<br>最后也都是进入triggerUpdateProcessor()。</p>
+<h2 id="多线程notify"><a href="#多线程notify" class="headerlink" title="多线程notify"></a>多线程notify</h2><p>通过RecyclerView提供的多种局部更新方法，我们可以看出来，这些更新操作都是连续的，比如对第N个item到第M个item进行删除，移动，修改。而上文中的猜想，我们是不是可以对notify进行分块更新，比如同时对第N个item到第M个item和第A个item到第B个item进行更新呢？</p>
+<p>事实上，notify操作最后是需要进行requestLayout的，requestLayout的流程会到ViewRootImpl那儿去layout，这个操作是一定需要在主线程进行的，所以notify的操作我们必须在这之前进行，这里我们引入了一个判断。</p>
+<p>我们尝试一下，下面是我的关键代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">mAdapter.setOnItemClickListener(new RecyclerAdapterWithHeaderAndFooter.OnItemClickListener&lt;String&gt;() &#123;</div><div class="line">    @Override</div><div class="line">    public void onItemClick(int position, String data) &#123;</div><div class="line">        if (position % 2 == 0) &#123;</div><div class="line">            mList.add(0, &quot;嘿嘿&quot;);</div><div class="line">            Log.d(TAG, &quot;onItemClick: &quot; + Thread.currentThread().getName());</div><div class="line">            mAdapter.notifyItemInserted(0);</div><div class="line">            Log.d(TAG, &quot;onItemClick: &quot; + Thread.currentThread().getName());</div><div class="line">            Thread t = new Thread(</div><div class="line">                    new Runnable() &#123;</div><div class="line">                        @Override</div><div class="line">                        public void run() &#123;</div><div class="line">                            Log.d(TAG, &quot;run: &quot; + Thread.currentThread().getName());</div><div class="line">                            mList.add(3, &quot;哈哈&quot;);</div><div class="line">                            if (!mRecyclerView.isComputingLayout()) &#123;</div><div class="line">                                Log.d(TAG, &quot;run: 哈哈&quot;);</div><div class="line">                                mAdapter.notifyItemInserted(3);</div><div class="line"></div><div class="line">                            &#125;</div><div class="line"></div><div class="line">                        &#125;</div><div class="line">                    &#125;</div><div class="line">            );</div><div class="line">            t.start();</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>果然，实现了头部和尾部的同时更新。<br>可是……………………..我发现，上面的代码没有崩溃只是因为view不能同时进行requestLayout,</p>
+<p>然后我看了一下我打的log</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">09-07 17:17:31.459 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: onItemClick: main</div><div class="line">09-07 17:17:31.460 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: requestLayout: false</div><div class="line">09-07 17:17:31.460 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: onItemClick: main</div><div class="line">09-07 17:17:31.462 9885-12603/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: run: Thread-1099</div><div class="line">09-07 17:17:31.462 9885-12603/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: run: 哈哈</div><div class="line">09-07 17:17:31.475 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: onMeasure: main</div><div class="line">09-07 17:17:31.475 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: onMeasure: main</div><div class="line">09-07 17:17:31.477 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: onLayout: true</div><div class="line">09-07 17:17:31.478 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: requestLayout: true</div><div class="line">09-07 17:17:31.479 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: requestLayout: true</div><div class="line">09-07 17:17:31.485 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: requestLayout: true</div><div class="line">09-07 17:17:31.487 9885-9885/www.yinyien.com.recyclerviewheader D/YINYIENYINYIEN: requestLayout: true</div></pre></td></tr></table></figure>
+<p>我感觉我这么写应该也是同样的效果也行，恩，果然是一样的，这就尴尬了，其实根本不用多线程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">mAdapter.setOnItemClickListener(new RecyclerAdapterWithHeaderAndFooter.OnItemClickListener&lt;String&gt;() &#123;</div><div class="line">    @Override</div><div class="line">    public void onItemClick(int position, String data) &#123;</div><div class="line">        if (position % 2 == 0) &#123;</div><div class="line">            mList.add(0, &quot;嘿嘿&quot;);</div><div class="line">            Log.d(TAG, &quot;onItemClick: &quot; + Thread.currentThread().getName());</div><div class="line">            mAdapter.notifyItemInserted(0);</div><div class="line">            Log.d(TAG, &quot;onItemClick: &quot; + Thread.currentThread().getName());</div><div class="line">            mList.add(3, &quot;哈哈&quot;);</div><div class="line">            Log.d(TAG, &quot;run: 哈哈&quot;);</div><div class="line">            mAdapter.notifyItemInserted(3);</div><div class="line">            Log.d(TAG, &quot;onItemClick: &quot; + Thread.currentThread().getName());</div></pre></td></tr></table></figure>
+<p>不过讲道理notify不是会直接requestLayout重新走整个布局流程吗，为什么连续两个Notify之后才开始onMeasure呢？<br>这个问题我想起来我以前隐约看过的源码，android绘制画面并不是实时的，因为有一个帧率的存在，然后我重新看了一下ViewRootImpl<br>里面requestLayout的源码，下面是关键的代码，在Choreographer类里面。</p>
+<p>这有一个关键的常量sFrameDelay=10ms，所以10ms之后系统才会去绘制。对Choreographer类的讲解又是一大篇文章了，我这里就不展开了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div></pre></td><td class="code"><pre><div class="line">private void postCallbackDelayedInternal(int callbackType,</div><div class="line">        Object action, Object token, long delayMillis) &#123;</div><div class="line">    if (DEBUG_FRAMES) &#123;</div><div class="line">        Log.d(TAG, &quot;PostCallback: type=&quot; + callbackType</div><div class="line">                + &quot;, action=&quot; + action + &quot;, token=&quot; + token</div><div class="line">                + &quot;, delayMillis=&quot; + delayMillis);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    synchronized (mLock) &#123;</div><div class="line">        final long now = SystemClock.uptimeMillis();</div><div class="line">        final long dueTime = now + delayMillis;</div><div class="line">        mCallbackQueues[callbackType].addCallbackLocked(dueTime, action, token);</div><div class="line"></div><div class="line">        if (dueTime &lt;= now) &#123;</div><div class="line">            scheduleFrameLocked(now);</div><div class="line">        &#125; else &#123;</div><div class="line">            Message msg = mHandler.obtainMessage(MSG_DO_SCHEDULE_CALLBACK, action);</div><div class="line">            msg.arg1 = callbackType;</div><div class="line">            msg.setAsynchronous(true);</div><div class="line">            mHandler.sendMessageAtTime(msg, dueTime);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line"></div><div class="line"></div><div class="line">    private void scheduleFrameLocked(long now) &#123;</div><div class="line">    if (!mFrameScheduled) &#123;</div><div class="line">        mFrameScheduled = true;</div><div class="line">        if (USE_VSYNC) &#123;</div><div class="line">            if (DEBUG_FRAMES) &#123;</div><div class="line">                Log.d(TAG, &quot;Scheduling next frame on vsync.&quot;);</div><div class="line">            &#125;</div><div class="line"></div><div class="line">            // If running on the Looper thread, then schedule the vsync immediately,</div><div class="line">            // otherwise post a message to schedule the vsync from the UI thread</div><div class="line">            // as soon as possible.</div><div class="line">            if (isRunningOnLooperThreadLocked()) &#123;</div><div class="line">                scheduleVsyncLocked();</div><div class="line">            &#125; else &#123;</div><div class="line">                Message msg = mHandler.obtainMessage(MSG_DO_SCHEDULE_VSYNC);</div><div class="line">                msg.setAsynchronous(true);</div><div class="line">                mHandler.sendMessageAtFrontOfQueue(msg);</div><div class="line">            &#125;</div><div class="line">        &#125; else &#123;</div><div class="line">            final long nextFrameTime = Math.max(</div><div class="line">                    mLastFrameTimeNanos / TimeUtils.NANOS_PER_MS + sFrameDelay, now);</div><div class="line">            if (DEBUG_FRAMES) &#123;</div><div class="line">                Log.d(TAG, &quot;Scheduling next frame in &quot; + (nextFrameTime - now) + &quot; ms.&quot;);</div><div class="line">            &#125;</div><div class="line">            Message msg = mHandler.obtainMessage(MSG_DO_FRAME);</div><div class="line">            msg.setAsynchronous(true);</div><div class="line">            mHandler.sendMessageAtTime(msg, nextFrameTime);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>所以多线程Notify其实是一个伪命题，基于10ms的更新间隔，我们完全可以在主线程实现多块同时更新，只不过得保证在10ms之内加完。</p>
+<h2 id="RecyclerView更新tip"><a href="#RecyclerView更新tip" class="headerlink" title="RecyclerView更新tip"></a>RecyclerView更新tip</h2><p>RecyclerView的精细化更新确实很优秀，可以通过payload实现Item的局部更新，各种notify实现RecyclerView的局部更新，回收复用View，其实我感觉，几乎所有的View都可以用<br>RecyclerView重写一遍，虽然有的很麻烦</p>
+
+      
+    </div>
+    
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java/">java</a></li></ul>
+	</div>
+
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+    
+  </div>
+  
+</article>
+
+
+
+
+
+
+
+
+
+  
     <article id="post-headerGridView" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -203,19 +301,19 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>#初衷<br>写下本篇文章的初衷，是因为之前的代码使用了控件<a href="https://github.com/liaohuqiu/android-GridViewWithHeaderAndFooter" target="_blank" rel="external">GridViewWithHeaderAndFooter</a>，而我在扩展功能的时候踩了一个坑，踩的我痛心疾首，所以进行了一番了解</p>
-<p>#坑<br>这个坑很简单，在使用控件<a href="https://github.com/liaohuqiu/android-GridViewWithHeaderAndFooter" target="_blank" rel="external">GridViewWithHeaderAndFooter</a>的过程中，为GridView添加了两个header，然后动态的隐藏某一个header，GridView的的视图在4.0.3上没有按预想之中向上调整。由于GridViewWithHeaderAndFooter是在Google提供的HeaderGridView的基础上扩展的，原理都是一样的，果不其然，HeaderGridView也有同样的问题，所以我们直接看HeaderGridView的<a href="https://android.googlesource.com/platform/packages/apps/Gallery2/+/idea133/src/com/android/photos/views/HeaderGridView.java" target="_blank" rel="external">源码</a></p>
-<p>#查找思路<br>最开始，我觉得这个地方可能是grideview的Item的高度没有调整，所以猜想是onMeasure方法对高度进行了某种操作，所以查看了一下源码的onMeasure方法。<br>代码中Gridview的onMeasure方法被重载了，如图：<br><img src="http://img2.tbcdn.cn/L1/461/1/53a5e17be70de5a2f2be1096f315854e93e583e8" alt="header1"><br>装载header的layout的的onMeasure方法，如图：<br><img src="http://img2.tbcdn.cn/L1/461/1/1dfa02df7f229f15d7311092ee0659aeb9719539" alt="header2"><br>可以看到，两个onMeasure方法只是只是在宽度上做了调整，并没有对高度做任何操作，所以我很迷惑，所以就开始完整的看了一下这个控件的实现添加header的原理是什么。</p>
-<p>#HeaderGridView原理<br>首先我们看一下addHeader方法，HeaderGridView把添加进来的header的相关信息保存在一个自定义的FixedViewInfo中，然后把FixedViewInfo保存在了一个数组之中，之后就notifyDataSetChanged<br><img src="http://img2.tbcdn.cn/L1/461/1/53b6aa3d35c5bdbc73554393dc66149ff76979d6" alt="addheader"><br>notifyDataSetChanged会重新去绘制这个gridview所以这个时候，我们需要查看一下getView方法（注释的代码是我后来为了查问题加上的）<br><img src="http://img2.tbcdn.cn/L1/461/1/88186a64b58f047deec570d85ff82eb90f449354" alt="getview"></p>
+        <h1 id="初衷"><a href="#初衷" class="headerlink" title="初衷"></a>初衷</h1><p>写下本篇文章的初衷，是因为之前的代码使用了控件<a href="https://github.com/liaohuqiu/android-GridViewWithHeaderAndFooter" target="_blank" rel="external">GridViewWithHeaderAndFooter</a>，而我在扩展功能的时候踩了一个坑，踩的我痛心疾首，所以进行了一番了解</p>
+<h1 id="坑"><a href="#坑" class="headerlink" title="坑"></a>坑</h1><p>这个坑很简单，在使用控件<a href="https://github.com/liaohuqiu/android-GridViewWithHeaderAndFooter" target="_blank" rel="external">GridViewWithHeaderAndFooter</a>的过程中，为GridView添加了两个header，然后动态的隐藏某一个header，GridView的的视图在4.0.3上没有按预想之中向上调整。由于GridViewWithHeaderAndFooter是在Google提供的HeaderGridView的基础上扩展的，原理都是一样的，果不其然，HeaderGridView也有同样的问题，所以我们直接看HeaderGridView的<a href="https://android.googlesource.com/platform/packages/apps/Gallery2/+/idea133/src/com/android/photos/views/HeaderGridView.java" target="_blank" rel="external">源码</a></p>
+<h1 id="查找思路"><a href="#查找思路" class="headerlink" title="查找思路"></a>查找思路</h1><p>最开始，我觉得这个地方可能是grideview的Item的高度没有调整，所以猜想是onMeasure方法对高度进行了某种操作，所以查看了一下源码的onMeasure方法。<br>代码中Gridview的onMeasure方法被重载了，如图：<br><img src="http://img2.tbcdn.cn/L1/461/1/53a5e17be70de5a2f2be1096f315854e93e583e8" alt="header1"><br>装载header的layout的的onMeasure方法，如图：<br><img src="http://img2.tbcdn.cn/L1/461/1/1dfa02df7f229f15d7311092ee0659aeb9719539" alt="header2"><br>可以看到，两个onMeasure方法只是只是在宽度上做了调整，并没有对高度做任何操作，所以我很迷惑，所以就开始完整的看了一下这个控件的实现添加header的原理是什么。</p>
+<h1 id="HeaderGridView原理"><a href="#HeaderGridView原理" class="headerlink" title="HeaderGridView原理"></a>HeaderGridView原理</h1><p>首先我们看一下addHeader方法，HeaderGridView把添加进来的header的相关信息保存在一个自定义的FixedViewInfo中，然后把FixedViewInfo保存在了一个数组之中，之后就notifyDataSetChanged<br><img src="http://img2.tbcdn.cn/L1/461/1/53b6aa3d35c5bdbc73554393dc66149ff76979d6" alt="addheader"><br>notifyDataSetChanged会重新去绘制这个gridview所以这个时候，我们需要查看一下getView方法（注释的代码是我后来为了查问题加上的）<br><img src="http://img2.tbcdn.cn/L1/461/1/88186a64b58f047deec570d85ff82eb90f449354" alt="getview"></p>
 <p>这里果然有header如何显示的秘密，事实上HeaderGridView是把每行的第一个设为headerView，然后把这一行之后的itemView都设做和headerView等高，然后把这些itemView设置为INVISIBLE，等于说只占位，不显示，所以headerView就能把这一行占满，从而做到了添加header。<br>这里面有一句话引起了我的注意<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">// We need to do this because GridView uses the height of the last item</div><div class="line"> // in a row to determine the height for the entire row.</div></pre></td></tr></table></figure></p>
 <p>大意是GridView会用每一行的最后一个item来决定这一行有多高，说明这里才会决定每一行有多高，所以上面的那个坑很可能是这里的代码导致的，而决定高度的代码一共也只有下面这一行。所以我们想可能是这个地方的实现在4.0.3有所区别<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">convertView.setMinimumHeight(headerViewContainer.getHeight());</div></pre></td></tr></table></figure></p>
 <p>5.0的setMinimumHeight<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">public void setMinimumHeight(int minHeight) &#123;</div><div class="line">    mMinHeight = minHeight;</div><div class="line">    requestLayout();</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>4.0.3的setMinimumHeight<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">public void setMinimumHeight(int minHeight) &#123;</div><div class="line">    mMinHeight = minHeight;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>4.0.3比少了一行关键的代码，所以导致了每一行第一个之后的item高度都没有更新，所以这个坑也就得到了解释。添加了requestLayout()之后果然解决了这个问题。</p>
-<p>#requestLayout()<br>解决完这个问题之后，又有一个新的问题在我的心里萦绕，为什么调用了requestLayout()之后就解决了这个问题呢？<br>事实上，在最初想要解决这个问题的时候，我无论是对headerView.requestLayout()还是对gridView.requestLayout()都没有起到任何作用，在我之前的印象中，requestLayout()会一直向上调用到ViewRootImpl，从头measure，但是，为什么没有measure到item呢？</p>
+<h1 id="requestLayout"><a href="#requestLayout" class="headerlink" title="requestLayout()"></a>requestLayout()</h1><p>解决完这个问题之后，又有一个新的问题在我的心里萦绕，为什么调用了requestLayout()之后就解决了这个问题呢？<br>事实上，在最初想要解决这个问题的时候，我无论是对headerView.requestLayout()还是对gridView.requestLayout()都没有起到任何作用，在我之前的印象中，requestLayout()会一直向上调用到ViewRootImpl，从头measure，但是，为什么没有measure到item呢？</p>
 <p>这个问题需要我们探究一下requestLayout()的源码，调用了requestLayout()会先把当前view的标志位置为PFLAG_FORCE_LAYOUT和PFLAG_INVALIDATED，然后才会向上调用requestLayout()，从字面上理解，这两个标志位是要强制layout当前的view，并把view设做invalidated。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div></pre></td><td class="code"><pre><div class="line">public void requestLayout() &#123;</div><div class="line">    if (mMeasureCache != null) mMeasureCache.clear();</div><div class="line"></div><div class="line">    if (mAttachInfo != null &amp;&amp; mAttachInfo.mViewRequestingLayout == null) &#123;</div><div class="line">        // Only trigger request-during-layout logic if this is the view requesting it,</div><div class="line">        // not the views in its parent hierarchy</div><div class="line">        ViewRootImpl viewRoot = getViewRootImpl();</div><div class="line">        if (viewRoot != null &amp;&amp; viewRoot.isInLayout()) &#123;</div><div class="line">            if (!viewRoot.requestLayoutDuringLayout(this)) &#123;</div><div class="line">                return;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        mAttachInfo.mViewRequestingLayout = this;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    mPrivateFlags |= PFLAG_FORCE_LAYOUT;</div><div class="line">    mPrivateFlags |= PFLAG_INVALIDATED;</div><div class="line"></div><div class="line">    if (mParent != null &amp;&amp; !mParent.isLayoutRequested()) &#123;</div><div class="line">        mParent.requestLayout();</div><div class="line">    &#125;</div><div class="line">    if (mAttachInfo != null &amp;&amp; mAttachInfo.mViewRequestingLayout == this) &#123;</div><div class="line">        mAttachInfo.mViewRequestingLayout = null;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <p>在ViewRootImpl的requestLayout()中会重新向下measure，我们知道，在父view中会遍历调用子view的measure方法，那么，其他item的measuer应该调用到了才对啊。<br>所以我们看一看view的measure方法的关键代码，只有满足一个条件才会去重新measure，一个是有PFLAG_FORCE_LAYOUT的标签，还有一个是<br>widthMeasureSpec或者heightMeasureSpec变了。<br>因为在requestLayout()中已经有了PFLAG_FORCE_LAYOUT的标志位，所以调用requestLayout()的view肯定会重新measure。<br>而为什么其他item就算没有PFLAG_FORCE_LAYOUT，但是明明也调用了setMinimumHeight了呀，为什么MeasureSpec不算改变了呢？事实上，通过看源码，mMinHeight只是用来限制view的的高度下限的，并不会直接导致MeasureSpec，而这里，item的高度并没有小于新设置的mMinHeight，所以MeasureSpec也没有变，所以没有触发其他item的measure，从而导致了4.0.3上的这个问题。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">if ((mPrivateFlags &amp; PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT ||</div><div class="line">        widthMeasureSpec != mOldWidthMeasureSpec ||</div><div class="line">        heightMeasureSpec != mOldHeightMeasureSpec) &#123;</div><div class="line"></div><div class="line">    // first clears the measured dimension flag</div><div class="line">    mPrivateFlags &amp;= ~PFLAG_MEASURED_DIMENSION_SET;</div><div class="line"></div><div class="line">    resolveRtlPropertiesIfNeeded();</div><div class="line"></div><div class="line">    int cacheIndex = (mPrivateFlags &amp; PFLAG_FORCE_LAYOUT) == PFLAG_FORCE_LAYOUT ? -1 :</div><div class="line">            mMeasureCache.indexOfKey(key);</div><div class="line">    if (cacheIndex &lt; 0 || sIgnoreMeasureCache) &#123;</div><div class="line">        // measure ourselves, this should set the measured dimension flag back</div><div class="line">        onMeasure(widthMeasureSpec, heightMeasureSpec);</div><div class="line">        mPrivateFlags3 &amp;= ~PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;</div><div class="line">    &#125; else &#123;</div><div class="line">        long value = mMeasureCache.valueAt(cacheIndex);</div><div class="line">        // Casting a long to int drops the high 32 bits, no mask needed</div><div class="line">        setMeasuredDimensionRaw((int) (value &gt;&gt; 32), (int) value);</div><div class="line">        mPrivateFlags3 |= PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    // flag not set, setMeasuredDimension() was not invoked, we raise</div><div class="line">    // an exception to warn the developer</div><div class="line">    if ((mPrivateFlags &amp; PFLAG_MEASURED_DIMENSION_SET) != PFLAG_MEASURED_DIMENSION_SET) &#123;</div><div class="line">        throw new IllegalStateException(&quot;View with id &quot; + getId() + &quot;: &quot;</div><div class="line">                + getClass().getName() + &quot;#onMeasure() did not set the&quot;</div><div class="line">                + &quot; measured dimension by calling&quot;</div><div class="line">                + &quot; setMeasuredDimension()&quot;);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    mPrivateFlags |= PFLAG_LAYOUT_REQUIRED;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
-<p>#小结<br>源码之前,了无秘密啊</p>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>源码之前,了无秘密啊</p>
 
       
     </div>
@@ -952,62 +1050,10 @@ public void onDestroy() {
 
 
   
-    <article id="post-2015-09-07-dingding-first" class="article article-type-post" itemscope itemprop="blogPost">
   
-    <div class="article-meta">
-      <a href="/2015/09/08/2015-09-07-dingding-first/" class="article-date">
-  	<time datetime="2015-09-08T03:56:56.000Z" itemprop="datePublished">2015-09-08</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy" />
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/09/08/2015-09-07-dingding-first/">生活本来没有目的</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>我是惦念着你的一个黑色影子</p><br><p>在永恒的二维生命中凝望着三维的你</p><br><p>这个站点对于我来说本来没有目的</p><br><p>只是因为无意间你在这里</p><br><p>而我，恰好也在这里</p>
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-	<div class="article-tag tagcloud">
-		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/welcome/">welcome</a></li></ul>
-	</div>
-
-      
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">Next &raquo;</a>
+    </nav>
   
 </div>
       <footer id="footer">
