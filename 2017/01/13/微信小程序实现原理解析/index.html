@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" >
+  <title>微信小程序实现原理 | ian的Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="开发方法WXMLWXML(WeiXin Markup Language)是微信设计的一套标签语言，结合基础组件、事件系统，可以构建出页面的结构。这句话的描述太技术，翻译成人话就是使用熟悉的XML就可以开发出漂亮的页面，每个xml标签就是微信内置的组件和原生的html标签。通过这种方式彻底屏蔽了底层页面和组件的实现方式，后续不管前端技术如何发展，小程序开发者的代码理论上不需要做任何的变化。如果前端技">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微信小程序实现原理">
+<meta property="og:url" content="http://www.yinyien.com/2017/01/13/微信小程序实现原理解析/index.html">
+<meta property="og:site_name" content="ian的Blog">
+<meta property="og:description" content="开发方法WXMLWXML(WeiXin Markup Language)是微信设计的一套标签语言，结合基础组件、事件系统，可以构建出页面的结构。这句话的描述太技术，翻译成人话就是使用熟悉的XML就可以开发出漂亮的页面，每个xml标签就是微信内置的组件和原生的html标签。通过这种方式彻底屏蔽了底层页面和组件的实现方式，后续不管前端技术如何发展，小程序开发者的代码理论上不需要做任何的变化。如果前端技">
+<meta property="og:updated_time" content="2017-04-27T15:43:15.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="微信小程序实现原理">
+<meta name="twitter:description" content="开发方法WXMLWXML(WeiXin Markup Language)是微信设计的一套标签语言，结合基础组件、事件系统，可以构建出页面的结构。这句话的描述太技术，翻译成人话就是使用熟悉的XML就可以开发出漂亮的页面，每个xml标签就是微信内置的组件和原生的html标签。通过这种方式彻底屏蔽了底层页面和组件的实现方式，后续不管前端技术如何发展，小程序开发者的代码理论上不需要做任何的变化。如果前端技">
+  
+    <link rel="alternative" href="/atom.xml" title="ian的Blog" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+	<header id="header" class="inner">
+		<a href="/" class="profilepic">
+			
+			<img lazy-src="http://img3.duitang.com/uploads/item/201605/28/20160528205430_Wr3MK.thumb.700_0.jpeg" class="js-avatar">
+			
+		</a>
+
+		<hgroup>
+		  <h1 class="header-author"><a href="/">ian</a></h1>
+		</hgroup>
+
+		
+
+		
+			<div class="switch-btn">
+				<div class="icon">
+					<div class="icon-ctn">
+						<div class="icon-wrap icon-house" data-idx="0">
+							<div class="birdhouse"></div>
+							<div class="birdhouse_holes"></div>
+						</div>
+						<div class="icon-wrap icon-ribbon hide" data-idx="1">
+							<div class="ribbon"></div>
+						</div>
+						
+						<div class="icon-wrap icon-link hide" data-idx="2">
+							<div class="loopback_l"></div>
+							<div class="loopback_r"></div>
+						</div>
+						
+						
+						<div class="icon-wrap icon-me hide" data-idx="3">
+							<div class="user"></div>
+							<div class="shoulder"></div>
+						</div>
+						
+					</div>
+					
+				</div>
+				<div class="tips-box hide">
+					<div class="tips-arrow"></div>
+					<ul class="tips-inner">
+						<li>Menu</li>
+						<li>Tags</li>
+						
+						<li>Links</li>
+						
+						
+						<li>Über</li>
+						
+					</ul>
+				</div>
+			</div>
+		
+
+		<div class="switch-area">
+			<div class="switch-wrap">
+				<section class="switch-part switch-part1">
+					<nav class="header-menu">
+						<ul>
+						
+							<li><a href="/">主页</a></li>
+				        
+							<li><a href="/archives">所有文章</a></li>
+				        
+							<li><a href="/tags/随笔">随笔</a></li>
+				        
+						</ul>
+					</nav>
+					<nav class="header-nav">
+						<div class="social">
+							
+								<a class="github" target="_blank" href="#" title="github">github</a>
+					        
+						</div>
+					</nav>
+				</section>
+				
+				
+				<section class="switch-part switch-part2">
+					<div class="widget tagcloud" id="js-tagcloud">
+						<a href="/tags/Android/" style="font-size: 10px;">Android</a> <a href="/tags/Ruby/" style="font-size: 10px;">Ruby</a> <a href="/tags/android/" style="font-size: 15px;">android</a> <a href="/tags/java/" style="font-size: 20px;">java</a> <a href="/tags/mac/" style="font-size: 10px;">mac</a> <a href="/tags/music/" style="font-size: 10px;">music</a> <a href="/tags/welcome/" style="font-size: 10px;">welcome</a> <a href="/tags/源码解析/" style="font-size: 10px;">源码解析</a> <a href="/tags/调试工具/" style="font-size: 10px;">调试工具</a>
+					</div>
+				</section>
+				
+				
+				
+				<section class="switch-part switch-part3">
+					<div id="js-friends">
+					
+			          <a target="_blank" class="main-nav-link switch-friends-link" href="http://www.zhihu.com">奥巴马的博客</a>
+			        
+			        </div>
+				</section>
+				
+
+				
+				
+				<section class="switch-part switch-part4">
+				
+					<div id="js-aboutme">大家都一样</div>
+				</section>
+				
+			</div>
+		</div>
+	</header>				
+</div>
+
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+  	<div class="overlay">
+  		<div class="slider-trigger"></div>
+  		<h1 class="header-author js-mobile-header hide">ian</h1>
+  	</div>
+	<div class="intrude-less">
+		<header id="header" class="inner">
+			<div class="profilepic">
+			
+				<img lazy-src="http://img3.duitang.com/uploads/item/201605/28/20160528205430_Wr3MK.thumb.700_0.jpeg" class="js-avatar">
+			
+			</div>
+			<hgroup>
+			  <h1 class="header-author">ian</h1>
+			</hgroup>
+			
+			<nav class="header-menu">
+				<ul>
+				
+					<li><a href="/">主页</a></li>
+		        
+					<li><a href="/archives">所有文章</a></li>
+		        
+					<li><a href="/tags/随笔">随笔</a></li>
+		        
+		        <div class="clearfix"></div>
+				</ul>
+			</nav>
+			<nav class="header-nav">
+				<div class="social">
+					
+						<a class="github" target="_blank" href="#" title="github">github</a>
+			        
+				</div>
+			</nav>
+		</header>				
+	</div>
+</nav>
+
+      <div class="body-wrap"><article id="post-微信小程序实现原理解析" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2017/01/13/微信小程序实现原理解析/" class="article-date">
+  	<time datetime="2017-01-13T08:49:12.000Z" itemprop="datePublished">2017-01-13</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy" />
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      微信小程序实现原理
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+	<div class="article-tag tagcloud">
+		<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/java/">java</a></li></ul>
+	</div>
+
+        
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="开发方法"><a href="#开发方法" class="headerlink" title="开发方法"></a>开发方法</h2><h3 id="WXML"><a href="#WXML" class="headerlink" title="WXML"></a>WXML</h3><p>WXML(WeiXin Markup Language)是微信设计的一套标签语言，结合基础组件、事件系统，可以构建出页面的结构。这句话的描述太技术，翻译成人话就是<em>使用熟悉的XML就可以开发出漂亮的页面，每个xml标签就是微信内置的组件和原生的html标签。<br>通过这种方式彻底屏蔽了底层页面和组件的实现方式，后续不管前端技术如何发展，小程序开发者的代码理论上不需要做任何的变化。如果前端技术发展了，微信需要做的就是开发一个新的转换器，把WXML转换成对应的新技术就行了。</em></p>
+<h3 id="WXSS"><a href="#WXSS" class="headerlink" title="WXSS"></a>WXSS</h3><p>WXSS(WeiXin Style Sheets)是MINA设计的一套样式语言，用于描述WXML的组件样式.这句话意思就是在开发时<em>只需要描述下组件的样式就行了，页面的布局，响应式不用你管，改个样式，字体大小，颜色，边框，相信这些对你没有任何学习成本</em></p>
+<h3 id="组件"><a href="#组件" class="headerlink" title="组件"></a>组件</h3><p>框架为开发者提供了一系列基础组件，开发者可以通过组合这些基础组件进行快速开发。组件是视图层的基本组成单元，并且自带一些功能与微信风格的样式。目前看来，微应用小程序的是限定只能使用这些组件来组成页面，这样能做出和微信风格保持一致的UI样式，并且一些组件使用native实现，能最大程度保证使用体验。</p>
+<h2 id="和普通网页开发的区别"><a href="#和普通网页开发的区别" class="headerlink" title="和普通网页开发的区别"></a>和普通网页开发的区别</h2><ul>
+<li><p>开发方式</p>
+<p>定义了一套自有的样式语言，限定了组件的类别和样式，但是实际上逻辑部分还是使用js来编写。</p>
+</li>
+<li><p>底层渲染</p>
+<p>目前看来，微信小程序实际上还是用webview在渲染，但是自定义了样式语言应该以后还是有一个抛弃webview的野心的</p>
+</li>
+<li><p>原生实现</p>
+<p>为了实现的更好的，更接近native的体验，一系列组件底层是用原生组件实现的，目前看来有</p>
+<ul>
+<li>底部tab</li>
+<li>loading</li>
+<li>picker</li>
+<li>modal</li>
+<li>toast</li>
+<li>action sheet</li>
+<li>textarea</li>
+<li>video</li>
+<li>map</li>
+<li>canvas<br>并且提供了一系列非ui的原生能力的实现，比如发起网络请求，上传文件等。</li>
+</ul>
+</li>
+</ul>
+<h2 id="特色"><a href="#特色" class="headerlink" title="特色"></a>特色</h2><h3 id="独立进程"><a href="#独立进程" class="headerlink" title="独立进程"></a>独立进程</h3><p>每一个小程序都是一个独立的进程（com.tencent.mm:appbrand*），这样最大程度的保证了小程序的内存使用，这样就能突破android对于单个应用内存大小的限制，不过根据观察，微信最多只会开5个小程序进程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">u0_a95    4038  745   1750772 57772 SyS_epoll_ 0000000000 S com.tencent.mm:push</div><div class="line">u0_a95    5572  745   1744464 51320 SyS_epoll_ 0000000000 S com.tencent.mm:exdevice</div><div class="line">u0_a95    5624  745   2306620 285708 SyS_epoll_ 0000000000 S com.tencent.mm</div><div class="line">u0_a95    6867  745   2273760 130800 SyS_epoll_ 0000000000 S com.tencent.mm:tools</div><div class="line">u0_a95    16308 745   2487288 253268 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand0</div><div class="line">u0_a95    19252 745   2325360 160040 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand2</div><div class="line">u0_a95    19438 745   2312928 151584 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand1</div><div class="line">u0_a95    19557 745   2313228 143328 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand3</div><div class="line">u0_a95    19952 745   2329660 147948 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand4</div></pre></td></tr></table></figure>
+<h3 id="独立task"><a href="#独立task" class="headerlink" title="独立task"></a>独立task</h3><p>每一个小程序都是一个独立的task，这样的实现我理解是为了方便的保存应用状态，更加灵活的控制任务栈。<br>因为在android中，假如处于同一个task，点击返回键，小程序的界面就会被销毁，处于不同task是可以很方便的保存状态的。<br>不过这么做也有弊端，就是在某些手机上，起一个新的task就真的跟起一个新的app的切换方式一样了。<br>不过对于微信小程序，这种方式也无害，毕竟名字都叫小程序了。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Activities=[ActivityRecord&#123;3445d28 u0 com.android.incallui/.InCallActivity t9424&#125;]</div><div class="line">Activities=[ActivityRecord&#123;3708dc2 u0 com.tencent.mm/.plugin.appbrand.ui.AppBrandUI4 t9446&#125;]</div><div class="line">Activities=[ActivityRecord&#123;a890426 u0 com.tencent.mm/.plugin.appbrand.ui.AppBrandUI2 t9445&#125;]</div><div class="line">Activities=[ActivityRecord&#123;6bc49a6 u0 com.tencent.mm/.plugin.appbrand.ui.AppBrandUI t9447&#125;]</div><div class="line">Activities=[ActivityRecord&#123;c8d06df u0 com.tencent.mm/.plugin.appbrand.ui.AppBrandUI3 t9440&#125;]</div><div class="line">Activities=[ActivityRecord&#123;b68fd43 u0 com.tencent.mm/.plugin.appbrand.ui.AppBrandUI1 t9441&#125;]</div><div class="line">Activities=[ActivityRecord&#123;d9d5f0c u0 com.android.systemui/.recents.RecentsActivity t9421&#125;]</div></pre></td></tr></table></figure>
+<h3 id="多webview"><a href="#多webview" class="headerlink" title="多webview"></a>多webview</h3><p>众所周知，webview是一个比较耗费内存的东西，不能开的太多，开太多就oom了，但是微信每一个小程序都开一个进程，内存根本用不完啊。<br>所以他可以开许多webview，同时开多个webview的意义也在于能保存状态。<br>在一个安卓app中，我们从A-&gt;B-&gt;C,再退回到A，A的状态还是跟我们进来的时候状态一样，并不需要重新渲染。用多个webview的意义也在于此，能够保存上一个webview的状态，让应用更加接近原生体验。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><em>结合上面三个功能点，独立进程，独立task，多webview，实现了在应用内保存每一个页面的状态，退出应用保存每一个应用的状态。真正实现接近原生的体验</em></p>
+<h2 id="钉钉可以借鉴的"><a href="#钉钉可以借鉴的" class="headerlink" title="钉钉可以借鉴的"></a>钉钉可以借鉴的</h2><h3 id="多进程"><a href="#多进程" class="headerlink" title="多进程"></a>多进程</h3><p>打开webview做成一个独立的进程有许多的好处，当然最大的好处就是内存可使用量大大增加，并且webview的崩溃不会影响到主进程，也能减少主进程oom崩溃的概率，实际上微信早就把webview做成了独立进程。可以看下面列表中<em>com.tencent.mm:tools</em>在打开webview前后内存占用量的变化</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">u0_a95    6867  745   2326472 176940 SyS_epoll_ 0000000000 S com.tencent.mm:tools</div><div class="line">u0_a95    22045 745   2157276 78548 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand3</div><div class="line">u0_a95    22152 745   2157856 78100 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand4</div><div class="line">u0_a95    23909 745   2156420 76720 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand0</div><div class="line">u0_a95    24021 745   2156656 77532 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand1</div><div class="line">u0_a95    24632 745   2156704 76004 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand2</div><div class="line">shell@OnePlus3:/ $ ps | grep &quot;com.tencent.mm&quot;</div><div class="line">u0_a95    4038  745   1751172 58292 SyS_epoll_ 0000000000 S com.tencent.mm:push</div><div class="line">u0_a95    5572  745   1744976 51352 SyS_epoll_ 0000000000 S com.tencent.mm:exdevice</div><div class="line">u0_a95    5624  745   2317524 309180 SyS_epoll_ 0000000000 S com.tencent.mm</div><div class="line">u0_a95    6867  745   2407232 217568 binder_thr 0000000000 S com.tencent.mm:tools</div><div class="line">u0_a95    22045 745   2157276 78548 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand3</div><div class="line">u0_a95    22152 745   2157856 78100 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand4</div><div class="line">u0_a95    23909 745   2156420 76720 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand0</div><div class="line">u0_a95    24021 745   2156656 77532 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand1</div><div class="line">u0_a95    24632 745   2156704 76004 SyS_epoll_ 0000000000 S com.tencent.mm:appbrand2</div><div class="line">shell@OnePlus3:/ $ ps | grep &quot;com.tencent.mm&quot;</div><div class="line">u0_a95    4038  745   1751172 58292 SyS_epoll_ 0000000000 S com.tencent.mm:push</div><div class="line">u0_a95    5572  745   1744976 51352 SyS_epoll_ 0000000000 S com.tencent.mm:exdevice</div><div class="line">u0_a95    5624  745   2318856 310192 SyS_epoll_ 0000000000 S com.tencent.mm</div><div class="line">u0_a95    6867  745   2326284 175520 SyS_epoll_ 0000000000 S com.tencent.mm:tools</div></pre></td></tr></table></figure>
+<h3 id="多webview-1"><a href="#多webview-1" class="headerlink" title="多webview"></a>多webview</h3><p>有了多进程之后，就能把钉钉已经具备的多webview功能给大规模推广，而不用担心内存问题了，并且能更进一步，将所有的打开新页面都做成打开新的webview，真正做到媲美原生的体验</p>
+<h3 id="独立task-1"><a href="#独立task-1" class="headerlink" title="独立task"></a>独立task</h3><p>将微应用做成独立task能更加简单的实现：退出微应用之后，微应用的状态还在，重新进入微应用依然不需要渲染。</p>
+<h4 id="举例：在使用微应用的过程中，突然来了一条重要消息，不得不处理，但是又不想失去微应用状态，当做成独立task之后，完全可以退出微应用去处理消息，处理完之后再进入微应用，状态还在。"><a href="#举例：在使用微应用的过程中，突然来了一条重要消息，不得不处理，但是又不想失去微应用状态，当做成独立task之后，完全可以退出微应用去处理消息，处理完之后再进入微应用，状态还在。" class="headerlink" title="举例：在使用微应用的过程中，突然来了一条重要消息，不得不处理，但是又不想失去微应用状态，当做成独立task之后，完全可以退出微应用去处理消息，处理完之后再进入微应用，状态还在。"></a>举例：在使用微应用的过程中，突然来了一条重要消息，不得不处理，但是又不想失去微应用状态，当做成独立task之后，完全可以退出微应用去处理消息，处理完之后再进入微应用，状态还在。</h4>
+      
+    </div>
+    
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2016/09/06/RecylerView/" id="article-nav-older" class="article-nav-link-wrap">
+      <div class="article-nav-title">RecyclerView的源码解析</div>
+      <strong class="article-nav-caption">></strong>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+<div class="share_jia">
+	<!-- JiaThis Button BEGIN -->
+	<div class="jiathis_style">
+		<span class="jiathis_txt">Share to: &nbsp; </span>
+		<a class="jiathis_button_facebook"></a> 
+    <a class="jiathis_button_twitter"></a>
+    <a class="jiathis_button_plus"></a> 
+    <a class="jiathis_button_tsina"></a>
+		<a class="jiathis_button_cqq"></a>
+		<a class="jiathis_button_douban"></a>
+		<a class="jiathis_button_weixin"></a>
+		<a class="jiathis_button_tumblr"></a>
+    <a href="http://www.jiathis.com/share" class="jiathis jiathis_txt jtico jtico_jiathis" target="_blank"></a>
+	</div>
+	<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=1405949716054953" charset="utf-8"></script>
+	<!-- JiaThis Button END -->
+</div>
+
+
+
+
+
+
+<div class="duoshuo">
+	<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="微信小程序实现原理解析" data-title="微信小程序实现原理" data-url="http://www.yinyien.com/2017/01/13/微信小程序实现原理解析/"></div>
+	<!-- 多说评论框 end -->
+	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+	<script type="text/javascript">
+	var duoshuoQuery = {short_name:"true"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+	<!-- 多说公共JS代码 end -->
+</div>
+
+
+
+
+</div>
+      <footer id="footer">
+  <div class="outer">
+    <div id="footer-info">
+    	<div class="footer-left">
+    		&copy; 2017 ian
+    	</div>
+      	<div class="footer-right">
+      		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
+      	</div>
+    </div>
+  </div>
+</footer>
+    </div>
+    
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+
+
+<script>
+	var yiliaConfig = {
+		fancybox: true,
+		mathjax: true,
+		animate: true,
+		isHome: false,
+		isPost: true,
+		isArchive: false,
+		isTag: false,
+		isCategory: false,
+		open_in_new: false
+	}
+</script>
+<script src="http://7.url.cn/edu/jslib/comb/require-2.1.6,jquery-1.9.1.min.js"></script>
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';                 
+    }       
+});
+</script>
+
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+  </div>
+</body>
+</html>
